@@ -1,0 +1,4 @@
+2026-03-29 13:05:30	141606	0	[INFO]	[root]	./tests/test_thread.cpp:9	 name : name_0 this->name : name_0 id : 141606 this->id : 141606
+2026-03-29 13:05:30	141607	0	[INFO]	[root]	./tests/test_thread.cpp:9	 name : name_2 this->name : name_2 id : 141607 this->id : 141607
+2026-03-29 13:05:30	141605	0	[INFO]	[root]	./tests/test_thread.cpp:59	mthread test end
+2026-03-29 13:05:30	141605	0	[INFO]	[root]	./tests/test_thread.cpp:60	2000000

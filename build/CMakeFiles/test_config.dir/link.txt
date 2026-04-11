@@ -1,0 +1,1 @@
+/usr/bin/g++  -g -O0 -g CMakeFiles/test_config.dir/tests/test_config.cpp.o -o ../bin/test_config  -Wl,-rpath,/home/blue/c_projects/sylar/lib ../lib/libblue.so /usr/lib/x86_64-linux-gnu/libyaml-cpp.so 

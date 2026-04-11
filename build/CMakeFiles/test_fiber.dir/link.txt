@@ -1,0 +1,1 @@
+/usr/bin/g++  -g -O0 -g CMakeFiles/test_fiber.dir/tests/test_fiber.cpp.o -o ../bin/test_fiber  -Wl,-rpath,/home/blue/c_projects/sylar/lib ../lib/libblue.so /usr/lib/x86_64-linux-gnu/libyaml-cpp.so 

@@ -1,0 +1,117 @@
+[
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++ -Dblue_EXPORTS -I/home/blue/c_projects/sylar/.  -g -O0 -g -fPIC -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue.dir/blue/log.cpp.o -c /home/blue/c_projects/sylar/blue/log.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/log.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++ -Dblue_EXPORTS -I/home/blue/c_projects/sylar/.  -g -O0 -g -fPIC -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue.dir/blue/util.cpp.o -c /home/blue/c_projects/sylar/blue/util.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/util.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++ -Dblue_EXPORTS -I/home/blue/c_projects/sylar/.  -g -O0 -g -fPIC -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue.dir/blue/config.cpp.o -c /home/blue/c_projects/sylar/blue/config.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/config.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++ -Dblue_EXPORTS -I/home/blue/c_projects/sylar/.  -g -O0 -g -fPIC -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue.dir/blue/mthread.cpp.o -c /home/blue/c_projects/sylar/blue/mthread.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/mthread.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++ -Dblue_EXPORTS -I/home/blue/c_projects/sylar/.  -g -O0 -g -fPIC -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue.dir/blue/fiber.cpp.o -c /home/blue/c_projects/sylar/blue/fiber.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/fiber.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++ -Dblue_EXPORTS -I/home/blue/c_projects/sylar/.  -g -O0 -g -fPIC -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue.dir/blue/schedular.cpp.o -c /home/blue/c_projects/sylar/blue/schedular.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/schedular.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++ -Dblue_EXPORTS -I/home/blue/c_projects/sylar/.  -g -O0 -g -fPIC -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue.dir/blue/iomanager.cpp.o -c /home/blue/c_projects/sylar/blue/iomanager.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/iomanager.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++ -Dblue_EXPORTS -I/home/blue/c_projects/sylar/.  -g -O0 -g -fPIC -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue.dir/blue/timer.cpp.o -c /home/blue/c_projects/sylar/blue/timer.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/timer.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/log.cpp.o -c /home/blue/c_projects/sylar/blue/log.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/log.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/util.cpp.o -c /home/blue/c_projects/sylar/blue/util.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/util.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/config.cpp.o -c /home/blue/c_projects/sylar/blue/config.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/config.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/mthread.cpp.o -c /home/blue/c_projects/sylar/blue/mthread.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/mthread.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/fiber.cpp.o -c /home/blue/c_projects/sylar/blue/fiber.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/fiber.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/schedular.cpp.o -c /home/blue/c_projects/sylar/blue/schedular.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/schedular.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/iomanager.cpp.o -c /home/blue/c_projects/sylar/blue/iomanager.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/iomanager.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/timer.cpp.o -c /home/blue/c_projects/sylar/blue/timer.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/timer.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test.dir/tests/test.cpp.o -c /home/blue/c_projects/sylar/tests/test.cpp",
+  "file": "/home/blue/c_projects/sylar/tests/test.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test_config.dir/tests/test_config.cpp.o -c /home/blue/c_projects/sylar/tests/test_config.cpp",
+  "file": "/home/blue/c_projects/sylar/tests/test_config.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test_thread.dir/tests/test_thread.cpp.o -c /home/blue/c_projects/sylar/tests/test_thread.cpp",
+  "file": "/home/blue/c_projects/sylar/tests/test_thread.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test_util.dir/tests/test_util.cpp.o -c /home/blue/c_projects/sylar/tests/test_util.cpp",
+  "file": "/home/blue/c_projects/sylar/tests/test_util.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test_fiber.dir/tests/test_fiber.cpp.o -c /home/blue/c_projects/sylar/tests/test_fiber.cpp",
+  "file": "/home/blue/c_projects/sylar/tests/test_fiber.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test_schedular.dir/tests/test_schedular.cpp.o -c /home/blue/c_projects/sylar/tests/test_schedular.cpp",
+  "file": "/home/blue/c_projects/sylar/tests/test_schedular.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test_iomanager.dir/tests/test_iomanager.cpp.o -c /home/blue/c_projects/sylar/tests/test_iomanager.cpp",
+  "file": "/home/blue/c_projects/sylar/tests/test_iomanager.cpp"
+}
+]
