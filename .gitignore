@@ -23,7 +23,6 @@ build/
 *.exp
 
 # CMake 生成文件
-CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
