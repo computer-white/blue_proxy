@@ -1,0 +1,46 @@
+# 编译输出目录
+bin/
+lib/
+build/
+
+# 可执行文件（如果有散落在各处的可执行文件）
+*.out
+*.exe
+
+# 库文件
+*.so
+*.a
+*.dylib
+*.dll
+
+# 编译中间文件
+*.o
+*.obj
+*.lo
+*.la
+*.al
+*.lib
+*.exp
+
+# CMake 生成文件
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# IDE 相关
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 日志文件
+*.log
+
+# core dumps
+core
+core.*
