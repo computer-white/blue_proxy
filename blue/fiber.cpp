@@ -19,6 +19,7 @@ namespace blue
         1024*1024,
         "fiber stack size");
     
+    // 内存分配器
     class MallocStackAllocator
     {
         public:
@@ -97,7 +98,37 @@ namespace blue
         return s_fiber_count;
     }
 
-    // 协程执行每个协程绑定的协程函数开始函数
+    // 2026-4-12新增
+    // 协程执行调度器主协程协程绑定的协程函数开始函数
+    void Fiber::MainCallFunc()
+    {
+        Fiber::FiberPtr curr = GetThis();
+        BLUE_ASSERT(curr);
+        BLUE_ASSERT(curr != t_mainfiber);
+        try
+        {
+            // 开始执行当前协程上面的任务
+            curr->m_cb();
+            curr->m_cb = nullptr;
+            curr->m_status.store(Status::TERM,std::memory_order_release);
+        }
+        catch(const std::exception& e)
+        {
+            curr->m_status.store(Status::EXCEPT,std::memory_order_release);
+            BLUE_LOG_ERROR(g_logger) << "Fiber Excetion " << e.what();
+        }
+        catch(...)
+        {
+            curr->m_status.store(Status::EXCEPT,std::memory_order_release);
+            BLUE_LOG_ERROR(g_logger) << "Fiber exception ";
+        }
+        auto self = curr.get();
+        curr.reset();
+        self->back(); // self还被其他shared_ptr管控,这里不需要手动释放
+        BLUE_LOG_INFO(g_logger) << "never come back : MainCallFunc swapOut";
+    }
+
+    // 协程执行每个协程绑定的协程函数的开始函数
     void Fiber::MainFunc()
     {
         Fiber::FiberPtr curr = GetThis();
@@ -128,7 +159,7 @@ namespace blue
 
     /*-------------------- private begin -------------------*/
 
-    // 主协程创建的构造函数(私有)
+    // 线程主协程创建的构造函数(私有)
     Fiber::Fiber(bool Create,Status init)
     {
         SetThis(this);
@@ -145,52 +176,21 @@ namespace blue
                                 << Fiber::GetFiberID();
     }   
 
-    // call(调度器的协程与调度器管理的其他协程进行切换)
-    void Fiber::call()
-    {
-        BLUE_ASSERT(m_status.load(std::memory_order_acquire) != Status::EXEC);
-        BLUE_ASSERT2(blue::Schedular::GetMainFiber(),"schedular main fiber not exit");
-        BLUE_ASSERT2(this,"this not exit");
-        SetThis(this);
-        m_status.store(Status::EXEC,std::memory_order_release);
-        if (swapcontext(&blue::Schedular::GetMainFiber()->m_ctx,&m_ctx))
-        {
-            BLUE_ASSERT2(false,"swapcontext error");
-        }
-    }
-
-    // back(调度器的主协程与调度器管理的主协程进行切换)
-    void Fiber::back()
-    {
-        BLUE_ASSERT2(blue::Schedular::GetMainFiber(),"GetMainFiber() not exit");
-        SetThis(blue::Schedular::GetMainFiber());
-
-        if (m_status.load(std::memory_order_acquire) != Status::TERM)
-        {
-            // 如果已经是 READY，不要改成 HOLD！
-            auto status = m_status.load(std::memory_order_acquire);
-            if (status != Status::READY) {
-                m_status.store(Status::HOLD, std::memory_order_release);
-            }
-        }
-        if (swapcontext(&m_ctx,&blue::Schedular::GetMainFiber()->m_ctx))
-        {
-            BLUE_ASSERT2(false,"swapcontext error");
-        }
-    }
-
     /* -------------------- private end --------------------*/
 
-    // 主协程去创建新的子协程
-    Fiber::Fiber(std::function<void()> cb,size_t stacksize):
+    // 主协程去创建新的子协程, cb : 回调函数, stacksize : 协程栈大小
+    // use_caller为true表示需要使用使用call,back协程上下文切换函数组
+    Fiber::Fiber(std::function<void()> cb,bool use_caller,size_t stacksize):
     m_id(++s_fiber_id),
     m_cb(cb)
     {
         // 关键(否则出现栈溢出,空指针导致swapOut上下文切换出现问题,程序不能正常退出,内存泄漏)
         // 目前来说这句可以省略,现在没有上面的问题了，想来一开始可能还是由于idle_fiber的问题导致
         // 但加上符合逻辑
-        SetThis(this);
-        
+        // 2026-4-12(修改了swapIn,swapOut的逻辑，不再去使用if,else在swap和call,back之间来回)\
+        切换,故而之前所有的协程上下文异常都是这个判断导致的,现在也无需现在也无需写SetThis(this)了)
+        // SetThis(this);
+
         m_status.store(Status::INIT,std::memory_order_release);
         ++s_fiber_count;
         // 非零设置stacksize,为零设置配置中的size
@@ -204,8 +204,16 @@ namespace blue
         m_ctx.uc_link = nullptr;
         m_ctx.uc_stack.ss_sp = m_stack;
         m_ctx.uc_stack.ss_size = m_stacksize;
-
-        makecontext(&m_ctx,&Fiber::MainFunc,0);
+        if (use_caller)
+        {
+            // 使用call,back协程上下文切换函数组
+            makecontext(&m_ctx,Fiber::MainCallFunc,0);
+        }
+        else
+        {
+            // 使用swapIn,swapOut协程上下文切换函数组
+            makecontext(&m_ctx,&Fiber::MainFunc,0);
+        }
         BLUE_LOG_INFO(g_logger) << "Fiber::Fiber(子协程构造) curr_id : " 
                                 << Fiber::GetFiberID();
     }
@@ -220,6 +228,7 @@ namespace blue
         
         if (m_stack) {
             auto status = m_status.load(std::memory_order_acquire);
+            // BLUE_LOG_INFO(g_logger) << "status : " << (int)status;
             BLUE_ASSERT(status == Status::TERM ||
                         status == Status::EXCEPT ||
                         status == Status::INIT);
@@ -253,7 +262,9 @@ namespace blue
         // 关键(否则出现栈溢出,空指针导致swapOut上下文切换出现问题,程序不能正常退出,内存泄漏)
         // 目前来说这句可以省略,现在没有上面的问题了，想来一开始可能还是由于idle_fiber的问题导致
         // 但加上符合逻辑
-        SetThis(this);
+        // 2026-4-12(修改了swapIn,swapOut的逻辑，不再去使用if,else在swap和call,back之间来回)\
+        切换,故而之前所有的协程上下文异常都是这个判断导致的,现在也无需写SetThis(this)了)
+        // SetThis(this);
 
         m_status.store(Status::INIT,std::memory_order_release);
         m_cb = cb;
@@ -269,38 +280,74 @@ namespace blue
 
     }
 
-    // 切换为当前协程执行
+    // 2026-4-12修改
+    // call(线程主协程跟其他协程切换),切换为当前协程执行
+    void Fiber::call()
+    {
+        BLUE_ASSERT(m_status.load(std::memory_order_acquire) != Status::EXEC);
+        BLUE_ASSERT2(t_mainfiber,"main fiber not exit");
+        BLUE_ASSERT2(this,"this not exit");
+        SetThis(this);
+        m_status.store(Status::EXEC,std::memory_order_release);
+        if (swapcontext(&t_mainfiber->m_ctx,&m_ctx))
+        {
+            BLUE_ASSERT2(false,"swapcontext error");
+        }
+    }
+
+    // back(线程主协程跟其他协程切换),当前协程切换到后台Hold
+    void Fiber::back()
+    {
+        BLUE_ASSERT2(t_mainfiber,"main fiber not exit");
+        SetThis(t_mainfiber.get());
+        if (m_status.load(std::memory_order_acquire) != Status::TERM)
+        {
+            // 如果已经是 READY，不要改成 HOLD！
+            auto status = m_status.load(std::memory_order_acquire);
+            if (status != Status::READY) {
+                m_status.store(Status::HOLD, std::memory_order_release);
+            }
+        }
+        if (swapcontext(&m_ctx,&t_mainfiber->m_ctx))
+        {
+            BLUE_ASSERT2(false,"swapcontext error");
+        }
+    }
+
+    // 协程调度器之间的协程互相切换
     void Fiber::swapIn()
     {
-        if (t_currfiber == blue::Schedular::GetMainFiber() || 
-        (blue::Schedular::GetThis() == nullptr && 
-        blue::Schedular::GetMainFiber() == nullptr))
+        // 保留没有调度器用法
+        if (blue::Schedular::GetThis() == nullptr && blue::Schedular::GetMainFiber() == nullptr)
         {
+            call();
+        }
+        else{
             BLUE_ASSERT(m_status.load(std::memory_order_acquire) != Status::EXEC);
-            BLUE_ASSERT2(t_mainfiber,"main fiber not exit");
+            BLUE_ASSERT2(blue::Schedular::GetMainFiber(),"schedular main fiber not exit");
             BLUE_ASSERT2(this,"this not exit");
             SetThis(this);
             m_status.store(Status::EXEC,std::memory_order_release);
-            if (swapcontext(&t_mainfiber->m_ctx,&m_ctx))
+            if (swapcontext(&blue::Schedular::GetMainFiber()->m_ctx,&m_ctx))
             {
                 BLUE_ASSERT2(false,"swapcontext error");
             }
         }
-        else
-        {
-            call();
-        }
     }
 
-    // 当前协程切换到后台Hold       
+    // 协程调度器之间的协程互相切换     
     void Fiber::swapOut()
     {
-        if (t_currfiber == blue::Schedular::GetMainFiber() || 
-        (blue::Schedular::GetThis() == nullptr && 
-        blue::Schedular::GetMainFiber() == nullptr))
+        // 保留没有调度器用法
+        if (blue::Schedular::GetThis() == nullptr && blue::Schedular::GetMainFiber() == nullptr)
         {
-            BLUE_ASSERT2(t_mainfiber,"main fiber not exit");
-            SetThis(t_mainfiber.get());
+            back();
+        }
+        else
+        {
+            BLUE_ASSERT2(blue::Schedular::GetMainFiber(),"GetMainFiber() not exit");
+            SetThis(blue::Schedular::GetMainFiber());
+
             if (m_status.load(std::memory_order_acquire) != Status::TERM)
             {
                 // 如果已经是 READY，不要改成 HOLD！
@@ -309,14 +356,10 @@ namespace blue
                     m_status.store(Status::HOLD, std::memory_order_release);
                 }
             }
-            if (swapcontext(&m_ctx,&t_mainfiber->m_ctx))
+            if (swapcontext(&m_ctx,&blue::Schedular::GetMainFiber()->m_ctx))
             {
                 BLUE_ASSERT2(false,"swapcontext error");
             }
-        }
-        else
-        {
-            back();
         }
     }
     

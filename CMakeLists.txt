@@ -47,6 +47,7 @@ set(LIB_SRC
     blue/schedular.cpp
     blue/iomanager.cpp
     blue/timer.cpp
+    blue/hook.cpp
     # 如果有更多源文件，在这里添加
     # blue/logger.cpp
     # blue/logappender.cpp
@@ -90,6 +91,11 @@ endif()
 # 检查源文件是否存在
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/blue/timer.cpp)
     message(FATAL_ERROR "源文件 blue/timer.cpp 不存在！")
+endif()
+
+# 检查源文件是否存在
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/blue/hook.cpp)
+    message(FATAL_ERROR "源文件 blue/hook.cpp 不存在！")
 endif()
 
 # 创建共享库
@@ -172,6 +178,16 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_iomanager.cpp)
     message(STATUS "测试程序已添加")
 else()
     message(WARNING "tests/test_iomanager.cpp 不存在，跳过测试程序")
+endif()
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_hook.cpp)
+    add_executable(test_hook tests/test_hook.cpp)
+    target_link_libraries(test_hook PRIVATE blue ${YAML_CPP} ${PTHREAD})  # 链接动态库
+    # target_link_libraries(test_config PRIVATE yaml-cpp)  # 显式链接
+
+    message(STATUS "测试程序已添加")
+else()
+    message(WARNING "tests/test_hook.cpp 不存在，跳过测试程序")
 endif()
 
 # 打印构建信息

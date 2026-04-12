@@ -1,11 +1,11 @@
 #include "blue/blue.h"
 #include <mutex>
 blue::Logger::LoggerPtr g_logger = BLUE_LOG_MASSAGE_ROOT();
-static int threads = 5;
+static int threads = 10;
 void test_fiber() {
     static int count = 5;
     BLUE_LOG_INFO(g_logger) << "test fiber, count=" << count;
-    sleep(1);
+    // sleep(1);
     if (--count >= 0) {
         blue::Schedular::GetThis()->schedule(&test_fiber);
     }

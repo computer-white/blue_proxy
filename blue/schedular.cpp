@@ -1,6 +1,7 @@
 #include "schedular.h"
 #include "log.h"
 #include "macro.h"
+#include "hook.h"
 namespace blue
 {
     static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
@@ -13,7 +14,7 @@ namespace blue
         : m_name(name)
     {
         BLUE_ASSERT(threads > 0);
-
+        
         // true : 表示所有线程(threads)都工作
         if (use_caller)
         {
@@ -27,7 +28,7 @@ namespace blue
             // 设置当前线程调度器指针
             t_schedularptr = this;
             // 设置调度器的主协程(线程主协程的子协程)
-            m_mainfiber.reset(new blue::Fiber(std::bind(&Schedular::run, this)));
+            m_mainfiber.reset(new blue::Fiber(std::bind(&Schedular::run, this),use_caller));
             // 设置线程名称
             blue::Mthread::SetThreadName(m_name);
             // 设置调度器的静态主协程
@@ -93,7 +94,7 @@ namespace blue
         // 放到stop启动,支持开启后提交任务
         // if (m_mainfiber)
         // {
-        //     m_mainfiber->swapIn();
+        //     m_mainfiber->call();
         //     BLUE_LOG_INFO(g_logger) << "call out m_mainfiber id : " <<
         //     m_mainfiber->GetFiberID() << " status : " << (int)m_mainfiber->getStatus();
         // }
@@ -102,8 +103,10 @@ namespace blue
     void Schedular::stop()
     {
         BLUE_LOG_INFO(g_logger) << "stop";
+
         m_autoStopping.store(true, std::memory_order_release);
         m_stopping.store(true, std::memory_order_release);
+
         // 如果总共只有一个工作线程(即主线程)
         if (m_mainfiber &&
             m_threadCounts == 0 &&
@@ -116,6 +119,7 @@ namespace blue
                 return;
             }
         }
+
         if (m_mainThreadId != -1)
         {
             BLUE_ASSERT(GetThis() == this);
@@ -124,21 +128,30 @@ namespace blue
         {
             BLUE_ASSERT(GetThis() != this);
         }
+
         // 其他工作线程tickle
         for (size_t i = 0; i < m_threadCounts; i++)
         {
             tickle();
         }
+
         // 调度器的主协程(线程主协程的子协程)tickle
         // 如果有主调度器协程，也需要唤醒
         if (m_mainfiber) {
             tickle();
-            // 只在有任务且未停止时才切换
-            if (!m_fibers.empty() && !stopping()) {
+            // // 只在有任务且未停止时才切换(修改了swapIn,swapOut的逻辑，不再去使用if,else在swap和call,back之间来回)\
+            切换,故而之前所有的协程上下文异常都是这个判断导致的,现在也无需这样写了
+            // if (!m_fibers.empty() && !stopping()) {
+            //     BLUE_LOG_INFO(g_logger) << "stop: switching to main fiber";
+            //     m_mainfiber->call();
+            // }
+            if (!stopping())
+            {
                 BLUE_LOG_INFO(g_logger) << "stop: switching to main fiber";
-                m_mainfiber->swapIn();
+                m_mainfiber->call();
             }
         }
+
         // 等待所有工作线程结束
         std::vector<blue::Mthread::MthreadPtr> thr;
         {
@@ -149,6 +162,7 @@ namespace blue
         {
             it->join();
         }
+
         BLUE_LOG_INFO(g_logger) << "stop completed";
     }
 
@@ -160,6 +174,10 @@ namespace blue
     void Schedular::run()
     {
         BLUE_LOG_INFO(g_logger) << "run";
+
+        // 设置hook,同步原语异步化
+        blue::set_hook_enable(true);
+
         setThis();
 
         // 不是主线程(将调度器的主协程设为当前线程的执行协程\

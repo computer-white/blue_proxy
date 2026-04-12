@@ -23,25 +23,34 @@ namespace blue
 
 
         private:
+            // 线程的主协程构造函数，外部可调用CreateMainFiber
             Fiber(bool Create,Status init);
-            // call(调度器的主协程和调度器下面的协程的切换),作为swapIn的辅助函数
-            void call();
-            // back(调度器的主协程和调度器下面的协程的切换),作为swapOut的辅助函数
-            void back();
         public:
             Fiber() = default;
-            Fiber(std::function<void()> cb,size_t stacksize = 0);
+            Fiber(std::function<void()> cb,bool use_caller = false,size_t stacksize = 0);
             ~Fiber();
+
             // 重置协程函数,并重置状态
             void reset(std::function<void()> cb);
-            // 切换到当前协程执行
+
+            // call(线程主协程跟其他协程切换),切换为当前协程执行
+            void call();
+
+            // back(线程主协程跟其他协程切换),当前协程切换到后台Hold
+            void back();
+
+            // 协程调度器之间的协程互相切换
             void swapIn();
-            // 当前协程切换到后台       
+
+            // 协程调度器之间的协程互相切换    
             void swapOut();
+
             // 获取协程id
             uint64_t getId() const { return m_id; } 
+
             // 获取协程状态
             Status getStatus() const { return m_status.load(std::memory_order_acquire); }
+
             // 设置协程状态
             void setStatus(Status st) { m_status.store(st,std::memory_order_release); } 
         public:
@@ -60,11 +69,12 @@ namespace blue
             // 获取id
             static uint64_t GetFiberID();
             static void MainFunc();
+            static void MainCallFunc();
         private:
             uint64_t m_id = 0;                                          
             uint32_t m_stacksize = 0;
             std::atomic<Status> m_status = Status::INIT;
-
+            
             ucontext_t m_ctx;
             void* m_stack = nullptr;
 
