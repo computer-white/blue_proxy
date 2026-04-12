@@ -7,5 +7,6 @@
 /home/blue/c_projects/sylar/build/CMakeFiles/test_fiber.dir
 /home/blue/c_projects/sylar/build/CMakeFiles/test_schedular.dir
 /home/blue/c_projects/sylar/build/CMakeFiles/test_iomanager.dir
+/home/blue/c_projects/sylar/build/CMakeFiles/test_hook.dir
 /home/blue/c_projects/sylar/build/CMakeFiles/edit_cache.dir
 /home/blue/c_projects/sylar/build/CMakeFiles/rebuild_cache.dir

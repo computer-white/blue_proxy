@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/blue_static.dir/blue/config.cpp.o.d"
   "CMakeFiles/blue_static.dir/blue/fiber.cpp.o"
   "CMakeFiles/blue_static.dir/blue/fiber.cpp.o.d"
+  "CMakeFiles/blue_static.dir/blue/hook.cpp.o"
+  "CMakeFiles/blue_static.dir/blue/hook.cpp.o.d"
   "CMakeFiles/blue_static.dir/blue/iomanager.cpp.o"
   "CMakeFiles/blue_static.dir/blue/iomanager.cpp.o.d"
   "CMakeFiles/blue_static.dir/blue/log.cpp.o"

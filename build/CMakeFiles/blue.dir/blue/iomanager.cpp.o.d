@@ -229,4 +229,5 @@ CMakeFiles/blue.dir/blue/iomanager.cpp.o: \
  /usr/include/c++/11/bits/sstream.tcc /usr/include/c++/11/map \
  /usr/include/c++/11/bits/stl_map.h \
  /usr/include/c++/11/bits/stl_multimap.h \
- /home/blue/c_projects/sylar/blue/singleton.h
+ /home/blue/c_projects/sylar/blue/singleton.h \
+ /home/blue/c_projects/sylar/blue/hook.h

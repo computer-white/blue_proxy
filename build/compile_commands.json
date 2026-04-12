@@ -41,6 +41,11 @@
 },
 {
   "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++ -Dblue_EXPORTS -I/home/blue/c_projects/sylar/.  -g -O0 -g -fPIC -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue.dir/blue/hook.cpp.o -c /home/blue/c_projects/sylar/blue/hook.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/hook.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
   "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/log.cpp.o -c /home/blue/c_projects/sylar/blue/log.cpp",
   "file": "/home/blue/c_projects/sylar/blue/log.cpp"
 },
@@ -81,6 +86,11 @@
 },
 {
   "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/blue_static.dir/blue/hook.cpp.o -c /home/blue/c_projects/sylar/blue/hook.cpp",
+  "file": "/home/blue/c_projects/sylar/blue/hook.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
   "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test.dir/tests/test.cpp.o -c /home/blue/c_projects/sylar/tests/test.cpp",
   "file": "/home/blue/c_projects/sylar/tests/test.cpp"
 },
@@ -113,5 +123,10 @@
   "directory": "/home/blue/c_projects/sylar/build",
   "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test_iomanager.dir/tests/test_iomanager.cpp.o -c /home/blue/c_projects/sylar/tests/test_iomanager.cpp",
   "file": "/home/blue/c_projects/sylar/tests/test_iomanager.cpp"
+},
+{
+  "directory": "/home/blue/c_projects/sylar/build",
+  "command": "/usr/bin/g++  -I/home/blue/c_projects/sylar/.  -g -O0 -g -fmacro-prefix-map=/home/blue/c_projects/sylar=. -fdebug-prefix-map=/home/blue/c_projects/sylar=. -std=gnu++17 -o CMakeFiles/test_hook.dir/tests/test_hook.cpp.o -c /home/blue/c_projects/sylar/tests/test_hook.cpp",
+  "file": "/home/blue/c_projects/sylar/tests/test_hook.cpp"
 }
 ]

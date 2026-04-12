@@ -10,6 +10,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/blue/c_projects/sylar/blue/config.cpp" "CMakeFiles/blue.dir/blue/config.cpp.o" "gcc" "CMakeFiles/blue.dir/blue/config.cpp.o.d"
   "/home/blue/c_projects/sylar/blue/fiber.cpp" "CMakeFiles/blue.dir/blue/fiber.cpp.o" "gcc" "CMakeFiles/blue.dir/blue/fiber.cpp.o.d"
+  "/home/blue/c_projects/sylar/blue/hook.cpp" "CMakeFiles/blue.dir/blue/hook.cpp.o" "gcc" "CMakeFiles/blue.dir/blue/hook.cpp.o.d"
   "/home/blue/c_projects/sylar/blue/iomanager.cpp" "CMakeFiles/blue.dir/blue/iomanager.cpp.o" "gcc" "CMakeFiles/blue.dir/blue/iomanager.cpp.o.d"
   "/home/blue/c_projects/sylar/blue/log.cpp" "CMakeFiles/blue.dir/blue/log.cpp.o" "gcc" "CMakeFiles/blue.dir/blue/log.cpp.o.d"
   "/home/blue/c_projects/sylar/blue/mthread.cpp" "CMakeFiles/blue.dir/blue/mthread.cpp.o" "gcc" "CMakeFiles/blue.dir/blue/mthread.cpp.o.d"

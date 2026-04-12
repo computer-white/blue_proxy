@@ -236,6 +236,19 @@ test_iomanager/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_iomanager.dir/build.make CMakeFiles/test_iomanager.dir/build
 .PHONY : test_iomanager/fast
 
+#=============================================================================
+# Target rules for targets named test_hook
+
+# Build rule for target.
+test_hook: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_hook
+.PHONY : test_hook
+
+# fast build rule for target.
+test_hook/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hook.dir/build.make CMakeFiles/test_hook.dir/build
+.PHONY : test_hook/fast
+
 blue/config.o: blue/config.cpp.o
 .PHONY : blue/config.o
 
@@ -289,6 +302,33 @@ blue/fiber.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/blue.dir/build.make CMakeFiles/blue.dir/blue/fiber.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/blue_static.dir/build.make CMakeFiles/blue_static.dir/blue/fiber.cpp.s
 .PHONY : blue/fiber.cpp.s
+
+blue/hook.o: blue/hook.cpp.o
+.PHONY : blue/hook.o
+
+# target to build an object file
+blue/hook.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/blue.dir/build.make CMakeFiles/blue.dir/blue/hook.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/blue_static.dir/build.make CMakeFiles/blue_static.dir/blue/hook.cpp.o
+.PHONY : blue/hook.cpp.o
+
+blue/hook.i: blue/hook.cpp.i
+.PHONY : blue/hook.i
+
+# target to preprocess a source file
+blue/hook.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/blue.dir/build.make CMakeFiles/blue.dir/blue/hook.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/blue_static.dir/build.make CMakeFiles/blue_static.dir/blue/hook.cpp.i
+.PHONY : blue/hook.cpp.i
+
+blue/hook.s: blue/hook.cpp.s
+.PHONY : blue/hook.s
+
+# target to generate assembly for a file
+blue/hook.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/blue.dir/build.make CMakeFiles/blue.dir/blue/hook.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/blue_static.dir/build.make CMakeFiles/blue_static.dir/blue/hook.cpp.s
+.PHONY : blue/hook.cpp.s
 
 blue/iomanager.o: blue/iomanager.cpp.o
 .PHONY : blue/iomanager.o
@@ -524,6 +564,30 @@ tests/test_fiber.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_fiber.dir/build.make CMakeFiles/test_fiber.dir/tests/test_fiber.cpp.s
 .PHONY : tests/test_fiber.cpp.s
 
+tests/test_hook.o: tests/test_hook.cpp.o
+.PHONY : tests/test_hook.o
+
+# target to build an object file
+tests/test_hook.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hook.dir/build.make CMakeFiles/test_hook.dir/tests/test_hook.cpp.o
+.PHONY : tests/test_hook.cpp.o
+
+tests/test_hook.i: tests/test_hook.cpp.i
+.PHONY : tests/test_hook.i
+
+# target to preprocess a source file
+tests/test_hook.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hook.dir/build.make CMakeFiles/test_hook.dir/tests/test_hook.cpp.i
+.PHONY : tests/test_hook.cpp.i
+
+tests/test_hook.s: tests/test_hook.cpp.s
+.PHONY : tests/test_hook.s
+
+# target to generate assembly for a file
+tests/test_hook.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hook.dir/build.make CMakeFiles/test_hook.dir/tests/test_hook.cpp.s
+.PHONY : tests/test_hook.cpp.s
+
 tests/test_iomanager.o: tests/test_iomanager.cpp.o
 .PHONY : tests/test_iomanager.o
 
@@ -633,6 +697,7 @@ help:
 	@echo "... test"
 	@echo "... test_config"
 	@echo "... test_fiber"
+	@echo "... test_hook"
 	@echo "... test_iomanager"
 	@echo "... test_schedular"
 	@echo "... test_thread"
@@ -643,6 +708,9 @@ help:
 	@echo "... blue/fiber.o"
 	@echo "... blue/fiber.i"
 	@echo "... blue/fiber.s"
+	@echo "... blue/hook.o"
+	@echo "... blue/hook.i"
+	@echo "... blue/hook.s"
 	@echo "... blue/iomanager.o"
 	@echo "... blue/iomanager.i"
 	@echo "... blue/iomanager.s"
@@ -670,6 +738,9 @@ help:
 	@echo "... tests/test_fiber.o"
 	@echo "... tests/test_fiber.i"
 	@echo "... tests/test_fiber.s"
+	@echo "... tests/test_hook.o"
+	@echo "... tests/test_hook.i"
+	@echo "... tests/test_hook.s"
 	@echo "... tests/test_iomanager.o"
 	@echo "... tests/test_iomanager.i"
 	@echo "... tests/test_iomanager.s"

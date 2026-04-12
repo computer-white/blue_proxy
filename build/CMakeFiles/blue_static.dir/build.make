@@ -184,6 +184,20 @@ CMakeFiles/blue_static.dir/blue/timer.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/blue_static.dir/blue/timer.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/blue/c_projects/sylar/blue/timer.cpp -o CMakeFiles/blue_static.dir/blue/timer.cpp.s
 
+CMakeFiles/blue_static.dir/blue/hook.cpp.o: CMakeFiles/blue_static.dir/flags.make
+CMakeFiles/blue_static.dir/blue/hook.cpp.o: ../blue/hook.cpp
+CMakeFiles/blue_static.dir/blue/hook.cpp.o: CMakeFiles/blue_static.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/blue/c_projects/sylar/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/blue_static.dir/blue/hook.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/blue_static.dir/blue/hook.cpp.o -MF CMakeFiles/blue_static.dir/blue/hook.cpp.o.d -o CMakeFiles/blue_static.dir/blue/hook.cpp.o -c /home/blue/c_projects/sylar/blue/hook.cpp
+
+CMakeFiles/blue_static.dir/blue/hook.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/blue_static.dir/blue/hook.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/blue/c_projects/sylar/blue/hook.cpp > CMakeFiles/blue_static.dir/blue/hook.cpp.i
+
+CMakeFiles/blue_static.dir/blue/hook.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/blue_static.dir/blue/hook.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/blue/c_projects/sylar/blue/hook.cpp -o CMakeFiles/blue_static.dir/blue/hook.cpp.s
+
 # Object files for target blue_static
 blue_static_OBJECTS = \
 "CMakeFiles/blue_static.dir/blue/log.cpp.o" \
@@ -193,7 +207,8 @@ blue_static_OBJECTS = \
 "CMakeFiles/blue_static.dir/blue/fiber.cpp.o" \
 "CMakeFiles/blue_static.dir/blue/schedular.cpp.o" \
 "CMakeFiles/blue_static.dir/blue/iomanager.cpp.o" \
-"CMakeFiles/blue_static.dir/blue/timer.cpp.o"
+"CMakeFiles/blue_static.dir/blue/timer.cpp.o" \
+"CMakeFiles/blue_static.dir/blue/hook.cpp.o"
 
 # External object files for target blue_static
 blue_static_EXTERNAL_OBJECTS =
@@ -206,9 +221,10 @@ blue_static_EXTERNAL_OBJECTS =
 ../lib/libblue.a: CMakeFiles/blue_static.dir/blue/schedular.cpp.o
 ../lib/libblue.a: CMakeFiles/blue_static.dir/blue/iomanager.cpp.o
 ../lib/libblue.a: CMakeFiles/blue_static.dir/blue/timer.cpp.o
+../lib/libblue.a: CMakeFiles/blue_static.dir/blue/hook.cpp.o
 ../lib/libblue.a: CMakeFiles/blue_static.dir/build.make
 ../lib/libblue.a: CMakeFiles/blue_static.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/blue/c_projects/sylar/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CXX static library ../lib/libblue.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/blue/c_projects/sylar/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX static library ../lib/libblue.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/blue_static.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/blue_static.dir/link.txt --verbose=$(VERBOSE)
 

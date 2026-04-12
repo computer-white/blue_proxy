@@ -217,4 +217,5 @@ CMakeFiles/blue_static.dir/blue/schedular.cpp.o: \
  /usr/include/x86_64-linux-gnu/asm/unistd_64.h \
  /usr/include/x86_64-linux-gnu/bits/syscall.h \
  /home/blue/c_projects/sylar/blue/singleton.h \
- /home/blue/c_projects/sylar/blue/macro.h /usr/include/assert.h
+ /home/blue/c_projects/sylar/blue/macro.h /usr/include/assert.h \
+ /home/blue/c_projects/sylar/blue/hook.h

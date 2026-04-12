@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "/home/blue/c_projects/sylar/bin/test_util"
+			"path" : "/home/blue/c_projects/sylar/bin/test_thread"
 		}
 	],
 	"backtrace" : 1,
@@ -27,13 +27,13 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 139,
+				"line" : 135,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 140,
+				"line" : 136,
 				"parent" : 0
 			},
 			{
@@ -105,7 +105,7 @@
 			"id" : "blue::@6890427a1f51a3e7e1df"
 		}
 	],
-	"id" : "test_util::@6890427a1f51a3e7e1df",
+	"id" : "test_thread::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -135,8 +135,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "test_util",
-	"nameOnDisk" : "test_util",
+	"name" : "test_thread",
+	"nameOnDisk" : "test_thread",
 	"paths" : 
 	{
 		"build" : ".",
@@ -157,7 +157,7 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "tests/test_util.cpp",
+			"path" : "tests/test_thread.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],
