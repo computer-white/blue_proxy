@@ -1,5 +1,5 @@
 # 编译输出目录
-bin/
+bin/*
 lib/
 build/
 !bin/cof
