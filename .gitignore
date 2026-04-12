@@ -2,7 +2,7 @@
 bin/
 lib/
 build/
-
+!bin/cof
 # 可执行文件（如果有散落在各处的可执行文件）
 *.out
 *.exe
