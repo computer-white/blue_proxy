@@ -1,0 +1,9 @@
+logs:
+  - name: root
+    level: info
+    appenders:
+      - name : file
+        type: FileoutLogAppender
+        file: /home/blue/c_projects/sylar/build/mutex.txt
+        level: INFO
+        
