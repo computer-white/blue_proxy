@@ -9,7 +9,10 @@ namespace blue
 	static thread_local bool t_hook_enable = false;
 	#define HOOK_FUNC(XX)\
 		XX(sleep)\
-		XX(usleep)
+		XX(usleep)\
+		XX(nanosleep)
+
+	// hook初始化
 	void hook_initial() 
 	{
 		static bool is_inited = false;
@@ -21,7 +24,7 @@ namespace blue
 		HOOK_FUNC(XX);
 	#undef XX
 	}
-
+	// ----main函数前会进行初始化
 	struct _HookIniter
 	{
 		_HookIniter() 
@@ -31,11 +34,15 @@ namespace blue
 	};
 
 	static _HookIniter s_hook_initer;
+	// ----main函数前会进行初始化
 
+	// 是否hook
 	bool is_hook_enable()
 	{
 		return t_hook_enable;
 	}
+
+	// 设置hook
 	void set_hook_enable(bool flag)
 	{
 		t_hook_enable = flag;
@@ -47,7 +54,7 @@ namespace blue
 	#undef XX
 		unsigned int sleep(unsigned int seconds)
 		{
-			if (!blue::t_hook_enable)
+			if (!blue::is_hook_enable())
 			{
 				BLUE_LOG_INFO(g_logger) << "sleep_f(seconds)";
 				return sleep_f(seconds);
@@ -69,7 +76,7 @@ namespace blue
 
 		int usleep(useconds_t usec)
 		{
-			if (!blue::t_hook_enable)
+			if (!blue::is_hook_enable())
 			{
 				BLUE_LOG_INFO(g_logger) << "usleep_f(seconds)";
 				return usleep_f(usec);
@@ -88,5 +95,27 @@ namespace blue
 			return 0;
 		}
 
+		int nanosleep(const struct timespec *req,struct timespec *rem)
+		{
+			if (!blue::is_hook_enable())
+			{
+				BLUE_LOG_INFO(g_logger) << "nanosleep_f(seconds)";
+				return nanosleep_f(req,rem);
+			}
+			uint64_t time_out = req->tv_sec * 1000 + req->tv_nsec / 1000 / 1000;
+			blue::Fiber::FiberPtr fiber = blue::Fiber::GetThis();
+			blue::IOManager* iom = blue::IOManager::GetThis();
+			if (!iom || !fiber) 
+			{
+            	return nanosleep_f(req,rem);
+        	}
+			BLUE_LOG_INFO(g_logger) << "hook successfuly";
+			iom->addTimer(time_out,[im = iom,f = fiber]() {
+				im->schedule(f);
+			});
+			blue::Fiber::YieldToHold();
+			return 0;
+		}
 	}
+	#undef HOOK_FUNC
 }

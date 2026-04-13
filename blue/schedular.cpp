@@ -139,7 +139,7 @@ namespace blue
         // 如果有主调度器协程，也需要唤醒
         if (m_mainfiber) {
             tickle();
-            // // 只在有任务且未停止时才切换(修改了swapIn,swapOut的逻辑，不再去使用if,else在swap和call,back之间来回)\
+            // // 只在有任务且未停止时才切换(2026-4-12修改了swapIn,swapOut的逻辑，不再去使用if,else在swap和call,back之间来回)\
             切换,故而之前所有的协程上下文异常都是这个判断导致的,现在也无需这样写了
             // if (!m_fibers.empty() && !stopping()) {
             //     BLUE_LOG_INFO(g_logger) << "stop: switching to main fiber";
