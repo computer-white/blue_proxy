@@ -241,33 +241,63 @@ void test_class()
     XX_V_P_M(g_vec_person_map_config_ptr, After);
 }
 
+// 利用pthread_once + pthread_once_t 实现保证配置只被加载一次
+static pthread_once_t init_done = PTHREAD_ONCE_INIT;
+static blue::Logger::LoggerPtr system_logger = nullptr;
+
+static void LoadYaml()
+{
+    // 加载配置文件（只执行一次）
+    YAML::Node root = YAML::LoadFile(
+        "/home/blue/c_projects/sylar/bin/cof/log.yml");
+    blue::Config::LoadFromYAML(root);
+    
+    // 获取 system logger（只获取一次）
+    system_logger = BLUE_LOG_NAME("system");
+    
+    // 输出初始配置（只输出一次）
+    std::cout << "##Before :\n"
+              << blue::LoggerMgr::GetInstance()->toyamlString() << std::endl;
+    
+    // 输出加载后的配置（只输出一次）
+    std::cout << "##After :\n"
+              << blue::LoggerMgr::GetInstance()->toyamlString() << std::endl;
+    
+    // 修改 formatter（只执行一次）
+    system_logger->SetFormatter("%d -- %m%n");
+}
+
 void test_log()
 {
     // 使用 call_once 确保配置只加载一次
-    static std::once_flag init_flag;
-    static blue::Logger::LoggerPtr system_logger = nullptr;
+    // static std::once_flag init_flag;
+    // static blue::Logger::LoggerPtr system_logger = nullptr;
     
-    std::call_once(init_flag, []() {
-        // 加载配置文件（只执行一次）
-        YAML::Node root = YAML::LoadFile(
-            "/home/blue/c_projects/sylar/bin/cof/log.yml");
-        blue::Config::LoadFromYAML(root);
+    // // 就是对pthread_once的包装
+    // std::call_once(init_flag, []() {
+    //     // 加载配置文件（只执行一次）
+    //     YAML::Node root = YAML::LoadFile(
+    //         "/home/blue/c_projects/sylar/bin/cof/log.yml");
+    //     blue::Config::LoadFromYAML(root);
         
-        // 获取 system logger（只获取一次）
-        system_logger = BLUE_LOG_NAME("system");
+    //     // 获取 system logger（只获取一次）
+    //     system_logger = BLUE_LOG_NAME("system");
         
-        // 输出初始配置（只输出一次）
-        std::cout << "##Before :\n"
-                  << blue::LoggerMgr::GetInstance()->toyamlString() << std::endl;
+    //     // 输出初始配置（只输出一次）
+    //     std::cout << "##Before :\n"
+    //               << blue::LoggerMgr::GetInstance()->toyamlString() << std::endl;
         
-        // 输出加载后的配置（只输出一次）
-        std::cout << "##After :\n"
-                  << blue::LoggerMgr::GetInstance()->toyamlString() << std::endl;
+    //     // 输出加载后的配置（只输出一次）
+    //     std::cout << "##After :\n"
+    //               << blue::LoggerMgr::GetInstance()->toyamlString() << std::endl;
         
-        // 修改 formatter（只执行一次）
-        system_logger->SetFormatter("%d -- %m%n");
-    });
+    //     // 修改 formatter（只执行一次）
+    //     system_logger->SetFormatter("%d -- %m%n");
+    // });
     
+    // 使用pthread_once
+    pthread_once(&init_done,LoadYaml);
+
     // 多线程并发写日志（每个线程都会执行）
     BLUE_LOG_INFO(system_logger) << "hello system ";
 }   
