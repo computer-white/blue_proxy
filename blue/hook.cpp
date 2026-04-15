@@ -10,7 +10,12 @@ namespace blue
 	#define HOOK_FUNC(XX)\
 		XX(sleep)\
 		XX(usleep)\
-		XX(nanosleep)
+		XX(nanosleep)\
+		XX(socket)\
+		XX(connect)\
+		XX(accept)\
+		XX(read)\
+		XX(write)
 
 	// hook初始化
 	void hook_initial() 

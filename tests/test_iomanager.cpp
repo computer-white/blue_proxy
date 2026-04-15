@@ -28,6 +28,7 @@ void test1()
 	int rt = connect(sco,(const sockaddr*)&addr,sizeof(addr));
 	if (rt < 0)
 	{
+		// 对于服务器来说这个状态处于三次握手阶段的第二次握手
 		if (errno == EINPROGRESS) {
 			// 连接正在建立中，这是正常情况
 			BLUE_LOG_INFO(g_logger) << "connect in progress";
