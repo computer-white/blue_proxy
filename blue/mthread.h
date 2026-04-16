@@ -43,6 +43,16 @@ namespace blue
                 unlock();
             }
 
+            // if successful, return 0
+            int try_lock()
+            {
+                int ret = m_mutex.try_lock();
+                if (ret == 0)
+                {
+                    m_locked = true;
+                }
+                return ret;
+            }
             void lock()
             {
                 if (!m_locked)
@@ -51,6 +61,7 @@ namespace blue
                     m_locked = true;
                 }
             }
+
             void unlock()
             {
                 if (m_locked)
@@ -82,6 +93,16 @@ namespace blue
                 unlock();
             }
 
+            // if successful, return 0
+            int try_lock()
+            {
+                int ret = m_mutex.try_rdlock();
+                if (ret == 0) {
+                    m_locked = true;
+                }
+                return ret;
+            }
+
             void lock()
             {
                 if (!m_locked)
@@ -90,6 +111,7 @@ namespace blue
                     m_locked = true;
                 }
             }
+
             void unlock()
             {
                 if (m_locked)
@@ -121,6 +143,16 @@ namespace blue
                 unlock();
             }
 
+            // if successful, return 0
+            int try_lock()
+            {
+                int ret = m_mutex.try_wrlock();
+                if (ret == 0) {
+                    m_locked = true;
+                }
+                return ret;
+            }
+
             void lock()
             {
                 if (!m_locked)
@@ -129,6 +161,7 @@ namespace blue
                     m_locked = true;
                 }
             }
+
             void unlock()
             {
                 if (m_locked)
@@ -152,6 +185,7 @@ namespace blue
             using lockSco =  ScopedlockedImpl<Mmutex>;
             Mmutex()
             {
+                // 初始化互斥锁,将其初始化为PTHREAD_MUTEX_INITIALIZER
                 pthread_mutex_init(&m_mutex,nullptr);
             }
 
@@ -159,15 +193,30 @@ namespace blue
             {
                 pthread_mutex_destroy(&m_mutex);
             }
+            
+            int try_lock()
+            {
+                return pthread_mutex_trylock(&m_mutex);
+            }
 
             void lock()
             {
-                pthread_mutex_lock(&m_mutex);
+                int ret = pthread_mutex_lock(&m_mutex);
+                if (ret != 0) 
+                {
+                    throw std::system_error(ret, std::system_category(),
+                                        "pthread_mutex_lock failed");
+                }
             }
 
             void unlock()
             {
-                pthread_mutex_unlock(&m_mutex);
+                int ret = pthread_mutex_unlock(&m_mutex);
+                if (ret != 0) 
+                {
+                    throw std::system_error(ret, std::system_category(),
+                                        "pthread_mutex_unlock failed");
+                }
             }
         private:
             pthread_mutex_t m_mutex;
@@ -180,29 +229,40 @@ namespace blue
             using lockSco = ScopedlockedImpl<SpinLockMutex>;
             SpinLockMutex()
             {
-                int ret = pthread_spin_init(&m_mutex, PTHREAD_PROCESS_PRIVATE);
+                // PTHREAD_PROCESS_PRIVATE 表示自旋锁仅能被初始化该锁的进程下的线程访问
+                // PTHREAD_PROCESS_SHARED 表示自旋锁可以被来自不同进程下的线程访问
+                int ret = pthread_spin_init(&m_lock, PTHREAD_PROCESS_PRIVATE);
                 if (ret != 0) 
                 {
                     throw std::system_error(ret, std::system_category(), 
                                         "pthread_spin_init failed");
                 }
             }
+
             ~SpinLockMutex()
             {
-                pthread_spin_destroy(&m_mutex);
+                // 销毁锁
+                pthread_spin_destroy(&m_lock);
             }
+
             void lock()
             {
-                int ret = pthread_spin_lock(&m_mutex);
+                int ret = pthread_spin_lock(&m_lock);
                 if (ret != 0) 
                 {
                     throw std::system_error(ret, std::system_category(),
                                         "pthread_spin_lock failed");
                 }
             }
+
+            int try_lock()
+            {
+                return pthread_spin_trylock(&m_lock);
+            }
+
             void unlock()
             {
-                int ret = pthread_spin_unlock(&m_mutex);
+                int ret = pthread_spin_unlock(&m_lock);
                 if (ret != 0) 
                 {
                     throw std::system_error(ret, std::system_category(),
@@ -216,7 +276,7 @@ namespace blue
             SpinLockMutex(SpinLockMutex&&) = delete;
             SpinLockMutex& operator=(SpinLockMutex&&) = delete;
         private:
-            pthread_spinlock_t m_mutex;
+            pthread_spinlock_t m_lock;
     };
 
     // 自旋锁(原子实现)
@@ -265,24 +325,50 @@ namespace blue
                 pthread_rwlock_destroy(&m_rwlock);
             }
 
+            int try_rdlock()
+            {
+                return pthread_rwlock_tryrdlock(&m_rwlock);
+            }
+
+            int try_wrlock()
+            {
+                return pthread_rwlock_trywrlock(&m_rwlock);
+            }
+
             void rdlock()
             {
-                pthread_rwlock_rdlock(&m_rwlock);
+                int ret = pthread_rwlock_rdlock(&m_rwlock);
+                if (ret != 0) 
+                {
+                    throw std::system_error(ret, std::system_category(),
+                                        "pthread_rwlock_rdlock failed");
+                }
             }
 
             void wrlock()
             {
-                pthread_rwlock_wrlock(&m_rwlock);
+                int ret = pthread_rwlock_wrlock(&m_rwlock);
+                if (ret != 0) 
+                {
+                    throw std::system_error(ret, std::system_category(),
+                                        "pthread_rwlock_wrlock failed");
+                }
             }
 
             void unlock()
             {
                 pthread_rwlock_unlock(&m_rwlock);
             }
+
+        public:
+            MRWmutex(const MRWmutex& othr) = delete;
+            MRWmutex(MRWmutex&& othr) = delete;
+            MRWmutex& operator= (const MRWmutex& othr) = delete;
+            MRWmutex& operator= (const MRWmutex&& othr) = delete;
         private:
             pthread_rwlock_t m_rwlock;
     };
-
+    
     // 无锁(对比有锁测试)
     class NullMutex
     {

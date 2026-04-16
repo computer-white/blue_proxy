@@ -55,6 +55,7 @@ namespace blue
         t_thread = thread;
         t_thread_name = thread->m_name;
         thread->m_id = blue::GetThreadId();
+        // pthread_self()返回tid
         pthread_setname_np(pthread_self(),thread->m_name.substr(0,15).c_str());
 
         std::function<void()> cb;
@@ -84,14 +85,20 @@ namespace blue
         {
             m_name = "NOKNOW";
         }
-        int rt = pthread_create(&m_thread,nullptr,&Mthread::run,this);
+        // 练习一下设置attr,这里不设置也可以
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE);
+        // 新创建的线程从start_routine开始运行,第一个参数被设立为新的线程
+        // 成功返回0,失败返回错误码
+        int rt = pthread_create(&m_thread,&attr,&Mthread::run,this);
         if (rt != 0)
         {
             BLUE_LOG_ERROR(g_logger) << "pthread_create file rt : " 
             << rt << " name is " << m_name;
             throw std::logic_error("pthread_create error");
         }
-
+        pthread_attr_destroy(&attr);
         // 等待run函数把一切都设置好
         m_semaphore.wait();
     }
@@ -99,14 +106,17 @@ namespace blue
     {
         if (m_thread)
         {
+            // 分离线程,线程潜在存储资源可以在终止时被立即回收
             pthread_detach(m_thread);
         }
     }
 
     void Mthread::join()
     {
+        // 调用完pthread_join后会自动将m_thread置于detach状态
+        // 成功返回0，失败返回错误码
         int rt = pthread_join(m_thread,nullptr);
-        if (rt)
+        if (rt != 0)
         {
             BLUE_LOG_ERROR(g_logger) << "pthread_join file rt : " 
             << rt << " name is " << m_name;

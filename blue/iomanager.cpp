@@ -54,12 +54,13 @@ namespace blue
     {
         m_epfd = epoll_create(5000);
         BLUE_ASSERT(m_epfd > 0);
+        // pipe,传入文件描述符数组,fd[0]为读打开,fd[1]为写打开,fd[1]的输出是fd[0]的输入
         int rt = pipe(m_ticklefds); // 成功返回0,m_ticklefds[1]的输出是m_ticklefds[0]的输入
         BLUE_ASSERT(rt == 0);
         epoll_event event;
         memset(&event, 0, sizeof(epoll_event));
-        event.events = EPOLLIN | EPOLLET;
-        event.data.fd = m_ticklefds[0];
+        event.events = EPOLLIN | EPOLLET; // 边缘触发 EPOLLET
+        event.data.fd = m_ticklefds[0]; // 设置文件描述符
 
         // 设置读文件描述符状态为非阻塞模式(O_NONBLOCK)
         rt = fcntl(m_ticklefds[0], F_SETFL, O_NONBLOCK);
