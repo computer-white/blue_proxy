@@ -7,15 +7,28 @@ namespace blue
 {
 	static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
 	static thread_local bool t_hook_enable = false;
-	#define HOOK_FUNC(XX)\
-		XX(sleep)\
-		XX(usleep)\
-		XX(nanosleep)\
-		XX(socket)\
-		XX(connect)\
-		XX(accept)\
-		XX(read)\
-		XX(write)
+	#define HOOK_FUNC(XX) \
+		XX(sleep) \
+		XX(usleep) \
+		XX(nanosleep) \
+		XX(socket) \
+		XX(connect) \
+		XX(accept) \
+		XX(read) \
+		XX(readv) \
+		XX(recvfrom) \
+		XX(recvmsg) \
+		XX(recv) \
+		XX(write) \
+		XX(writev) \
+		XX(send) \
+		XX(sendto) \
+		XX(sendmsg) \
+		XX(close) \
+		XX(fcntl) \
+		XX(ioctl) \
+		XX(getsockopt) \
+		XX(setsockopt)
 
 	// hook初始化
 	void hook_initial() 
@@ -121,6 +134,8 @@ namespace blue
 			blue::Fiber::YieldToHold();
 			return 0;
 		}
+
+		
 	}
 	#undef HOOK_FUNC
 }

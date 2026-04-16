@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 // 同步原语异步化
 
 // 将系统调用的sleep()拦截,变为我们自己实现的sleep()执行一个特定时间后提交任务的函数
@@ -35,7 +37,7 @@ extern "C" {
 	typedef int (*accept_func) (int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 	extern accept_func accept_f;
 
-	// rea
+	// read
 	typedef ssize_t (*read_func) (int fd, void *buf, size_t count);
 	extern read_func read_f;
 
@@ -68,5 +70,24 @@ extern "C" {
 
     typedef ssize_t (*sendmsg_func) (int sockfd, const struct msghdr *msg, int flags);
 	extern sendmsg_func sendmsg_f;
+	
+	// close
+	typedef int (*close_func) (int fd);
+	extern close_func close_f;
+
+	// socket operation
+	typedef int (*fcntl_func) (int fd, int cmd, ... /* arg */ );
+	extern fcntl_func fcntl_f;
+
+	typedef int (*ioctl_func) (int fd, unsigned long request, ...);
+	extern ioctl_func ioctl_f;
+
+	typedef int (*getsockopt_func) (int sockfd, int level, int optname,
+                      void *optval, socklen_t *optlen);
+	extern getsockopt_func getsockopt_f;
+
+    typedef int (*setsockopt_func) (int sockfd, int level, int optname,
+                      const void *optval, socklen_t optlen);
+	extern setsockopt_func setsockopt_f;
 }
 #endif // __BLUE_HOOK_H
