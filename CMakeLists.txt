@@ -39,15 +39,16 @@ include_directories(.)
 
 # 设置源文件变量
 set(LIB_SRC 
-    blue/log.cpp
-    blue/util.cpp
     blue/config.cpp
-    blue/mthread.cpp
+    blue/fdmanager.cpp
     blue/fiber.cpp
-    blue/schedular.cpp
-    blue/iomanager.cpp
-    blue/timer.cpp
     blue/hook.cpp
+    blue/iomanager.cpp
+    blue/log.cpp
+    blue/mthread.cpp
+    blue/schedular.cpp
+    blue/timer.cpp
+    blue/util.cpp
     # 如果有更多源文件，在这里添加
     # blue/logger.cpp
     # blue/logappender.cpp
@@ -96,6 +97,11 @@ endif()
 # 检查源文件是否存在
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/blue/hook.cpp)
     message(FATAL_ERROR "源文件 blue/hook.cpp 不存在！")
+endif()
+
+# 检查源文件是否存在
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/blue/fdmanager.cpp)
+    message(FATAL_ERROR "源文件 blue/fdmanager.cpp 不存在！")
 endif()
 
 # 创建共享库
