@@ -15,10 +15,15 @@ void test_fiber()
 
 void test1() 
 {
-	blue::IOManager im(5,true,"test1");
+	blue::IOManager im(3,true,"test1");
 	im.schedule(&test_fiber);
-	int sco = socket(AF_INET,SOCK_STREAM,0);
-	fcntl(sco,F_SETFL,O_NONBLOCK);
+	int sco = socket(AF_INET,SOCK_STREAM | SOCK_NONBLOCK,0);
+	if (sco == -1)
+	{
+		BLUE_LOG_ERROR(g_logger) << "socket error";
+		return;
+	}
+	// fcntl(sco,F_SETFL,O_NONBLOCK);
 
 	sockaddr_in addr;
 	memset(&addr,0,sizeof(addr));
@@ -60,7 +65,7 @@ void test_timer()
 }
 int main(int argc,char* argv[])
 {
-    // test1();
-	test_timer();
+    test1();
+	// test_timer();
 	return 0;
 }
