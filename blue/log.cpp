@@ -1,11 +1,11 @@
-#include "log.h"
-#include "config.h"
 #include <iostream>
 #include <ctype.h>
 #include <ctime>
 #include <functional>
 #include <stdarg.h>
 #include <iomanip>
+#include "log.h"
+#include "config.h"
 namespace blue
 {
     // 重载枚举类的 <<

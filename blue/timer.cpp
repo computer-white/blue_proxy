@@ -1,8 +1,8 @@
+#include <vector>
 #include "timer.h"
 #include "util.h"
 #include "log.h"
 #include "macro.h"
-#include <vector>
 namespace blue
 {   
     static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");

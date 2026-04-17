@@ -1,5 +1,5 @@
-#include "config.h"
 #include <iostream>
+#include "config.h"
 namespace blue
 {
     ConfigVarBase::ConfigVarBasePtr Config::LookUpBase(const std::string &name)

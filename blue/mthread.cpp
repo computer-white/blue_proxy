@@ -1,7 +1,7 @@
+#include <exception>
 #include "mthread.h"
 #include "log.h"
 #include "util.h"
-#include <exception>
 namespace blue
 {
     static thread_local Mthread* t_thread = nullptr;
