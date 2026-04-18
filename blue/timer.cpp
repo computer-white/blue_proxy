@@ -32,7 +32,8 @@ namespace blue
                  bool recurring, TimerManager *manager)
         : m_recurring(recurring), m_ms(ms), m_cb(cb), m_managger(manager)
     {
-        m_next = blue::GetCurrentMs() + m_ms;
+        // m_next = blue::GetCurrentMs() + m_ms;
+        m_next = blue::GetCurrentMsbyc() + m_ms;
     }
 
     Timer::Timer(uint64_t next) : m_next(next){}
@@ -94,7 +95,8 @@ namespace blue
         }
         m_managger->m_timers.erase(it);
         // 重置下次执行时间点
-        m_next = m_ms + blue::GetCurrentMs();
+        // m_next = m_ms + blue::GetCurrentMs();
+        m_next = m_ms + blue::GetCurrentMsbyc();
         // 重置后重新加入集合
         it = m_managger->m_timers.insert(shared_from_this()).first;
         // 判断是否需要唤醒epoll_wait
@@ -145,7 +147,8 @@ namespace blue
         if (from_now)
         {
             // 从当前时间
-            start = blue::GetCurrentMs();
+            // start = blue::GetCurrentMs();
+            start = blue::GetCurrentMsbyc();
         }
         else
         {
@@ -173,7 +176,8 @@ namespace blue
     TimerManager::TimerManager()
     {
         // 初始化上次的系统时间
-        m_previousTime = blue::GetCurrentMs();
+        // m_previousTime = blue::GetCurrentMs();
+        m_previousTime = blue::GetCurrentMsbyc();
     }
 
     Timer::TimerPtr TimerManager::addTimer(uint64_t ms,
@@ -212,7 +216,8 @@ namespace blue
 
     void TimerManager::listExpiredCb(std::vector<std::function<void()>> &vcb)
     {
-        uint64_t now_ms = blue::GetCurrentMs();
+        // uint64_t now_ms = blue::GetCurrentMs();
+        uint64_t now_ms = blue::GetCurrentMsbyc();
         std::vector<Timer::TimerPtr> expired;
         {
             MRWmutexType::ReadlockSco lock(m_mutex);
@@ -276,7 +281,8 @@ namespace blue
         }
 
         const Timer::TimerPtr &next = *m_timers.begin();
-        uint64_t now_ms = blue::GetCurrentMs();
+        // uint64_t now_ms = blue::GetCurrentMs();
+        uint64_t now_ms = blue::GetCurrentMsbyc();
         if (now_ms >= next->m_next)
         {
             // 立即执行

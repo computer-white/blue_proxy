@@ -52,7 +52,7 @@ blue::Timer::TimerPtr task;
 void test_timer()
 {
 	// 把主线程也去执行任务就会出错
-	blue::IOManager iom(3,true,"test_timer");
+	blue::IOManager iom(3,false,"test_timer");
 	task = iom.addTimer(1000,[](){
 		static int n = 0;
 		BLUE_LOG_INFO(g_logger) << "hello timer, n : " << n;
@@ -65,7 +65,7 @@ void test_timer()
 }
 int main(int argc,char* argv[])
 {
-    test1();
-	// test_timer();
+    // test1();
+	test_timer();
 	return 0;
 }

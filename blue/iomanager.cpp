@@ -36,7 +36,9 @@ namespace blue
     void IOManager::FdContext::triggerContext(IOManager::Event event)
     {
         BLUE_ASSERT(m_events & event);
+        // 哪个对象调用删除哪个对象的event事件,并提交event任务
         m_events = (Event)(m_events & ~event);
+        // 获取event事件对应的任务
         EventContext &ctx = getEventContext(event);
         if (ctx.cb)
         {
@@ -52,22 +54,32 @@ namespace blue
 
     IOManager::IOManager(size_t threads, bool use_caller, const std::string &name) : Schedular(threads, use_caller, name)
     {
+        // 创建5000个epoll instance(可以监听5000个事件)
         m_epfd = epoll_create(5000);
         BLUE_ASSERT(m_epfd > 0);
+
         // pipe,传入文件描述符数组,fd[0]为读打开,fd[1]为写打开,fd[1]的输出是fd[0]的输入
+        // 创建管道用于读和写
         int rt = pipe(m_ticklefds); // 成功返回0,m_ticklefds[1]的输出是m_ticklefds[0]的输入
+
         BLUE_ASSERT(rt == 0);
+
+        // 设置默认epoll event
         epoll_event event;
-        memset(&event, 0, sizeof(epoll_event));
+        memset(&event, 0, sizeof(event));
         event.events = EPOLLIN | EPOLLET; // 边缘触发 EPOLLET
         event.data.fd = m_ticklefds[0]; // 设置文件描述符
 
         // 设置读文件描述符状态为非阻塞模式(O_NONBLOCK)
         rt = fcntl(m_ticklefds[0], F_SETFL, O_NONBLOCK);
         BLUE_ASSERT(rt == 0);
+
+        // 添加(EPOLL_CTL_ADD)一个监听对象(m_ticklefds[0])的event事件,若这个对象(读端)被写入数据,则触发可读事件
         rt = epoll_ctl(m_epfd, EPOLL_CTL_ADD, m_ticklefds[0], &event);
         BLUE_ASSERT(rt == 0);
-        contextResize(64);
+
+        // contextResize(64);
+        contextSet(0);
         Schedular::start();
     }
 
@@ -78,34 +90,53 @@ namespace blue
         close(m_ticklefds[0]);
         close(m_ticklefds[1]);
 
-        for (size_t i = 0; i < m_fdContexts.size(); i++)
+        // for (size_t i = 0; i < m_fdContexts.size(); i++)
+        // {
+        //     if (m_fdContexts[i] != nullptr)
+        //     {
+        //         delete m_fdContexts[i];
+        //     }
+        // }
+
+        for (auto it : m_fdContexts)
         {
-            if (m_fdContexts[i] != nullptr)
-            {
-                delete m_fdContexts[i];
-            }
+            delete it.second;
         }
     }
 
-    // success : 0 , error : -1
     int IOManager::addEvent(int fd, Event event, std::function<void()> cb)
     {
         MRWmutexType::ReadlockSco lock1(m_mutex);
         FdContext *fd_ctx = nullptr;
-        if (m_fdContexts.size() > fd)
+        auto it = m_fdContexts.find(fd);
+        if (it == m_fdContexts.end())
         {
-            fd_ctx = m_fdContexts[fd];
             lock1.unlock();
+            MRWmutexType::WritelockSco lock(m_mutex);
+            contextSet(fd);
+            fd_ctx = m_fdContexts[fd];
         }
         else
         {
+            fd_ctx = it->second;
             lock1.unlock();
-            MRWmutexType::WritelockSco lock2(m_mutex);
-            contextResize(fd * 2);
-            fd_ctx = m_fdContexts[fd];
         }
 
+        // if (m_fdContexts.size() > fd)
+        // {
+        //     fd_ctx = m_fdContexts[fd];
+        //     lock1.unlock();
+        // }
+        // else
+        // {
+        //     lock1.unlock();
+        //     MRWmutexType::WritelockSco lock2(m_mutex);
+        //     contextResize(fd * 2);
+        //     fd_ctx = m_fdContexts[fd];
+        // }
+
         FdContext::MmutexType::lockSco lock2(fd_ctx->mutex);
+        // 重复提交相同任务
         if (fd_ctx->m_events & event)
         {
             BLUE_LOG_ERROR(g_logger) << "addEvent assert id : " << fd
@@ -113,6 +144,7 @@ namespace blue
                                      << " fc->m_events : " << fd_ctx->m_events;
             BLUE_ASSERT(!(fd_ctx->m_events & event));
         }
+        // 操作 EPOLL_CTL_MOD 修改, EPOLL_CTL_ADD 添加
         int op = fd_ctx->m_events ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
         epoll_event e_event;
         e_event.events = EPOLLET | fd_ctx->m_events | event;
@@ -127,7 +159,9 @@ namespace blue
             return -1;
         }
         ++m_pendingEventCounts;
+        // 将event添加为已注册的事件
         fd_ctx->m_events = (Event)(fd_ctx->m_events | event);
+
         FdContext::EventContext &event_context = fd_ctx->getEventContext(event);
         BLUE_ASSERT(!event_context.schedular &&
                     !event_context.fiber &&
@@ -149,11 +183,17 @@ namespace blue
     bool IOManager::delEvent(int fd, Event event)
     {
         MRWmutexType::ReadlockSco lock(m_mutex);
-        if (m_fdContexts.size() <= fd)
+        auto it = m_fdContexts.find(fd);
+        if (it == m_fdContexts.end())
         {
             return false;
         }
-        FdContext *fd_ctx = m_fdContexts[fd];
+        // if (m_fdContexts.size() <= fd)
+        // {
+        //     return false;
+        // }
+        // FdContext* fd_ctx = m_fdContexts[fd];
+        FdContext *fd_ctx = it->second;
         lock.unlock();
 
         FdContext::MmutexType::lockSco lock2(fd_ctx->mutex);
@@ -176,7 +216,9 @@ namespace blue
             return false;
         }
         --m_pendingEventCounts;
+        // 删除某些事件后的新的事件
         fd_ctx->m_events = new_event;
+
         FdContext::EventContext &event_context = fd_ctx->getEventContext(event);
         fd_ctx->resetEventContext(event_context);
         return true;
@@ -185,20 +227,34 @@ namespace blue
     bool IOManager::cancelEvent(int fd, Event event)
     {
         MRWmutexType::ReadlockSco lock(m_mutex);
-        if (m_fdContexts.size() <= fd)
+        auto it = m_fdContexts.find(fd);
+        if (it == m_fdContexts.end())
         {
             return false;
         }
-        FdContext *fd_ctx = m_fdContexts[fd];
+        // if (m_fdContexts.size() <= fd)
+        // {
+        //     return false;
+        // }
+        // FdContext* fd_ctx = m_fdContexts[fd];
+        FdContext *fd_ctx = it->second;
         lock.unlock();
 
         FdContext::MmutexType::lockSco lock2(fd_ctx->mutex);
+
+        // 没有事件无需取消
         if (!(fd_ctx->m_events & event))
         {
             return false;
         }
+
+        // 删除掉传进来的event后,加入新的监听
         Event new_event = (Event)(fd_ctx->m_events & ~event);
+
+        // 删除或修改
         int op = new_event ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
+
+        // epevent
         epoll_event epevent;
         epevent.events = EPOLLET | new_event;
         epevent.data.ptr = fd_ctx;
@@ -211,6 +267,8 @@ namespace blue
                                      << rt << "(" << errno << "," << strerror(errno) << ")";
             return false;
         }
+
+        // triggerContext包含删除fd_ctx的event事件
         fd_ctx->triggerContext(event);
         --m_pendingEventCounts;
         return true;
@@ -219,11 +277,17 @@ namespace blue
     bool IOManager::cancelAll(int fd)
     {
         MRWmutexType::ReadlockSco lock(m_mutex);
-        if (m_fdContexts.size() <= fd)
+        auto it = m_fdContexts.find(fd);
+        if (it == m_fdContexts.end())
         {
             return false;
         }
-        FdContext *fd_ctx = m_fdContexts[fd];
+        // if (m_fdContexts.size() <= fd)
+        // {
+        //     return false;
+        // }
+        // FdContext* fd_ctx = m_fdContexts[fd];
+        FdContext *fd_ctx = it->second;
         lock.unlock();
 
         FdContext::MmutexType::lockSco lock2(fd_ctx->mutex);
@@ -313,13 +377,14 @@ namespace blue
                 }
                 // BLUE_LOG_DEBUGE(g_logger) << "next_timeout : " << next_timeout;
                 rt = epoll_wait(m_epfd, epevent, 64, (int)next_timeout);
+                // 非阻塞IO,返回-1并把errno设为-1表示我们要的任务还没有被准备好
                 if (rt < 0 && errno == EINTR)
                 {
                     continue;
                 }
                 else
                 {
-                    break;
+                    break; // 有任务了
                 }
             } while (true);
 
@@ -335,14 +400,14 @@ namespace blue
                 cbs.clear();
             }
 
+            // 处理可以执行的任务(epoll_wait返回的任务数)
             for (int i = 0; i < rt; i++)
             {
                 epoll_event &event = epevent[i];
                 if (event.data.fd == m_ticklefds[0])
                 {
                     uint8_t dummy;
-                    while (read(m_ticklefds[0], &dummy, 1) == 1)
-                        ;
+                    while (read(m_ticklefds[0], &dummy, 1) == 1);
                     continue;
                 }
 
@@ -378,6 +443,7 @@ namespace blue
                     continue;
                 }
 
+                // 执行任务
                 if (real_event & Event::READ)
                 {
                     fd_ctx->triggerContext(Event::READ);
@@ -397,17 +463,23 @@ namespace blue
         }
     }
 
-    void IOManager::contextResize(size_t size)
+    // void IOManager::contextResize(size_t size)
+    // {
+    //     m_fdContexts.resize(size);
+    //     for (size_t i = 0; i < size; i++)
+    //     {
+    //         if (m_fdContexts[i] == nullptr)
+    //         {
+    //             m_fdContexts[i] = new FdContext;
+    //             m_fdContexts[i]->fd = i;
+    //         }
+    //     }
+    // }
+
+    void IOManager::contextSet(int fd)
     {
-        m_fdContexts.resize(size);
-        for (size_t i = 0; i < size; i++)
-        {
-            if (m_fdContexts[i] == nullptr)
-            {
-                m_fdContexts[i] = new FdContext;
-                m_fdContexts[i]->fd = i;
-            }
-        }
+        m_fdContexts[fd] = new FdContext;
+        m_fdContexts[fd]->fd = fd;
     }
 
     void IOManager::onTimerInsertedAtFront()

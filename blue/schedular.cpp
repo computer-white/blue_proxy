@@ -188,7 +188,7 @@ namespace blue
             // t_mainfiber具有线程局部性,每个线程各持有一份，不会互相影响
             t_mainfiber = blue::Fiber::GetThis().get();
         }
-
+        
         // 休闲fiber
         blue::Fiber::FiberPtr idle_fiber = std::make_shared<blue::Fiber>(std::bind(&Schedular::idle, this));
 

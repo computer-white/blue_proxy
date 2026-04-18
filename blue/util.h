@@ -26,7 +26,12 @@ std::string BacktraceToString(int size,int skip = 2,const std::string& prefix = 
 uint64_t GetCurrentMs();
 // 获取当前时间(us)
 uint64_t GetCurrentUs();
-
+// 获取当前时间(ms)
+uint64_t GetCurrentMsbyc();
+// 获取当前时间(us)
+uint64_t GetCurrentUsbyc();
+// 获取当前时间(ns)
+uint64_t GetCurrentNsbyc();
 }
 
 #endif // __BLUE_UTIL_H__

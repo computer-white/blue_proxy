@@ -12,7 +12,12 @@ namespace blue
     public:
         using SchedularPtr = std::shared_ptr<Schedular>;
         using MmutexType = blue::Mmutex;
-        // threads : 线程个数 use_caller : 是否使用主线程执行任务 name : 主线程名称
+        /*
+            Schedular构造函数
+            threads : 总线程个数
+            use_caller : 是否使用主线程执行任务
+            name : 主线程名称
+        */
         Schedular(size_t threads = 1, bool use_caller = true, const std::string &name = "");
         virtual ~Schedular();
         // 获取线程名称
@@ -27,8 +32,11 @@ namespace blue
         // 关闭调度器
         void stop();
 
-        // with lock
-        // fof : 任务类型(fiber or func), thr : 指定线程执行任务.不写则由系统默认分配
+        /*
+            with lock
+            fof : 任务类型(fiber or func)
+            thr : 指定线程执行任务.不写则由系统默认分配
+        */
         template <typename FiberOrFunc>
         void schedule(FiberOrFunc &&fof, int thr = -1)
         {
@@ -43,8 +51,11 @@ namespace blue
             }
         }
 
-        // with lock
-        // fof : 任务类型(fiber or func), thr : 指定线程执行任务.不写则由系统默认分配
+        /*
+            with lock
+            fof : 任务类型(fiber or func)
+            thr : 指定线程执行任务.不写则由系统默认分配
+        */
         template <typename InputIterator>
         void schedule(InputIterator begin, InputIterator end, int thr = -1)
         {

@@ -70,6 +70,24 @@ namespace blue
         gettimeofday(&v,NULL);
         return v.tv_sec * 1000ul * 1000ul + v.tv_usec;
     }
+    uint64_t GetCurrentMsbyc()
+    {
+        struct timespec tsp;
+        clock_gettime(CLOCK_MONOTONIC,&tsp);
+        return tsp.tv_sec * 1000ul + tsp.tv_nsec / 1000000ul;
+    }
+    uint64_t GetCurrentUsbyc()
+    {
+        struct timespec tsp;
+        clock_gettime(CLOCK_MONOTONIC,&tsp);
+        return tsp.tv_sec * 1000ul * 1000ul + tsp.tv_nsec / 1000ul;
+    }
+    uint64_t GetCurrentNsbyc()
+    {
+        struct timespec tsp;
+        clock_gettime(CLOCK_MONOTONIC,&tsp);
+        return tsp.tv_sec * 1000ul * 1000ul * 1000ul + tsp.tv_nsec;
+    }
 
 
 }
