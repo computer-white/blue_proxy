@@ -361,6 +361,8 @@ namespace blue
                 old_val = m_val;
                 m_val = new_val;
             }  // 写锁释放
+
+            // 调用func回调函数(监听器)来通知配置的值已经被更改
             for (auto &[key, func] : m_mapfunc) {
                 func(old_val, m_val);
             }
