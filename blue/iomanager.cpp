@@ -54,8 +54,11 @@ namespace blue
 
     IOManager::IOManager(size_t threads, bool use_caller, const std::string &name) : Schedular(threads, use_caller, name)
     {
-        // 创建5000个epoll instance(可以监听5000个事件)
-        m_epfd = epoll_create(5000);
+        // 现代linux对epoll_create的实现,可以忽略size只要传入的大于0就行
+        // 只要传一个大于 0 的数就行。内核会根据你实际添加的 fd 数量，
+        // 完全动态地去管理红黑树的内存，用多少，分多少
+        // 所以这个就相当于是一个动态的epoll管理器
+        m_epfd = epoll_create(1);
         BLUE_ASSERT(m_epfd > 0);
 
         // pipe,传入文件描述符数组,fd[0]为读打开,fd[1]为写打开,fd[1]的输出是fd[0]的输入
@@ -74,7 +77,8 @@ namespace blue
         rt = fcntl(m_ticklefds[0], F_SETFL, O_NONBLOCK);
         BLUE_ASSERT(rt == 0);
 
-        // 添加(EPOLL_CTL_ADD)一个监听对象(m_ticklefds[0])的event事件,若这个对象(读端)被写入数据,则触发可读事件
+        // 添加(EPOLL_CTL_ADD)一个监听对象(m_ticklefds[0]),并注册一个fd相关的event事件的就绪回调,
+        // 若这个对象(读端)被写入数据,则触发可读事件
         rt = epoll_ctl(m_epfd, EPOLL_CTL_ADD, m_ticklefds[0], &event);
         BLUE_ASSERT(rt == 0);
 
@@ -146,8 +150,9 @@ namespace blue
         }
         // 操作 EPOLL_CTL_MOD 修改, EPOLL_CTL_ADD 添加
         int op = fd_ctx->m_events ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
+        Event newevent = (Event)(fd_ctx->m_events | event);
         epoll_event e_event;
-        e_event.events = EPOLLET | fd_ctx->m_events | event;
+        e_event.events = EPOLLET | (unsigned)newevent;
         e_event.data.ptr = fd_ctx;
 
         int rt = epoll_ctl(m_epfd, op, fd, &e_event);
@@ -204,7 +209,7 @@ namespace blue
         Event new_event = (Event)(fd_ctx->m_events & ~event);
         int op = new_event ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
         epoll_event epevent;
-        epevent.events = EPOLLET | new_event;
+        epevent.events = EPOLLET | (unsigned)new_event;
         epevent.data.ptr = fd_ctx;
 
         int rt = epoll_ctl(m_epfd, op, fd, &epevent);
@@ -256,7 +261,7 @@ namespace blue
 
         // epevent
         epoll_event epevent;
-        epevent.events = EPOLLET | new_event;
+        epevent.events = EPOLLET | (unsigned)new_event;
         epevent.data.ptr = fd_ctx;
 
         int rt = epoll_ctl(m_epfd, op, fd, &epevent);
@@ -377,7 +382,7 @@ namespace blue
                 }
                 // BLUE_LOG_DEBUGE(g_logger) << "next_timeout : " << next_timeout;
                 rt = epoll_wait(m_epfd, epevent, 64, (int)next_timeout);
-                // 非阻塞IO,返回-1并把errno设为-1表示我们要的任务还没有被准备好
+                // 非阻塞IO,返回-1并设置errno = EINTR表示我们要的任务还没有被准备好
                 if (rt < 0 && errno == EINTR)
                 {
                     continue;
@@ -426,11 +431,13 @@ namespace blue
                 {
                     real_event |= Event::WRITE;
                 }
+                // 没有事件
                 if ((fd_ctx->m_events & real_event) == Event::NONE)
                 {
                     continue;
                 }
-
+                
+                // 把事件拿出来后在epoll里面要么删除要么更改
                 int left_events = (fd_ctx->m_events & ~real_event);
                 int op = left_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
                 event.events = EPOLLET | left_events;
@@ -459,7 +466,7 @@ namespace blue
             auto curr_ptr = curr.get();
             curr.reset();
 
-            curr_ptr->swapOut();
+            curr_ptr->swapOut(); // idle协程切换到后台
         }
     }
 

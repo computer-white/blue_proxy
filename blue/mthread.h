@@ -24,6 +24,7 @@ namespace blue
             Semaphore(const Semaphore&) = delete;
             Semaphore(Semaphore&&) = delete;
             Semaphore& operator= (const Semaphore&) = delete;
+            Semaphore& operator= (Semaphore&&) = delete;
         private:
             sem_t m_semaphore;
     };
