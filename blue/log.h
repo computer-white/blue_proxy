@@ -14,9 +14,9 @@
 #include "mthread.h"
 // 宏展开输出
 #define BLUE_LOG_LEVER(logger, level)                                                             \
-    if (logger->get_level() <= level)                                                             \
+    if (logger->getlevel() <= level)                                                              \
     blue::LogEventWrap(blue::LogEvent::LogEventPtr(new blue::LogEvent(logger, level, __FILE__,    \
-                                                                      time(0), __LINE__,    \
+                                                                      time(0), __LINE__,          \
                                                                       0, blue::GetThreadId(),     \
                                                                       blue::GetFiberID(),         \
                                                                       blue::Mthread::GetName()))) \
@@ -29,14 +29,14 @@
 #define BLUE_LOG_FATAL(logger) BLUE_LOG_LEVER(logger, blue::Level::FATAL)
 
 // format输出
-#define BLUE_LOG_FORMAT_LEVEL(logger, fmt, level, ...)                                              \
-    if (logger->get_level() <= level)                                                               \
-    blue::LogEventWrap(blue::LogEvent::LogEventPtr(new blue::LogEvent(logger, level, __FILE__,      \
-                                                                      time(0), __LINE__, 0,  \
-                                                                      blue::GetThreadId(),          \
-                                                                      blue::GetFiberID(),           \
-                                                                      blue::Mthread::GetName())))   \
-        .getEvent()                                                                                 \
+#define BLUE_LOG_FORMAT_LEVEL(logger, fmt, level, ...)                                            \
+    if (logger->getlevel() <= level)                                                              \
+    blue::LogEventWrap(blue::LogEvent::LogEventPtr(new blue::LogEvent(logger, level, __FILE__,    \
+                                                                      time(0), __LINE__, 0,       \
+                                                                      blue::GetThreadId(),        \
+                                                                      blue::GetFiberID(),         \
+                                                                      blue::Mthread::GetName()))) \
+        .getEvent()                                                                               \
         ->format(fmt, ##__VA_ARGS__)
 
 #define BLUE_LOG_FORMAT_DEBUGE(logger, fmt, ...) BLUE_LOG_FORMAT_LEVEL(logger, fmt, blue::Level::DEBUG, ##__VA_ARGS__)
@@ -46,10 +46,10 @@
 #define BLUE_LOG_FORMAT_FATAL(logger, fmt, ...) BLUE_LOG_FORMAT_LEVEL(logger, fmt, blue::Level::FATAL, ##__VA_ARGS__)
 
 // 输出LogMessageRoot,默认输出到控制台
-#define BLUE_LOG_MASSAGE_ROOT() blue::LoggerMgr::GetInstance()->GetRoot()
+#define BLUE_LOG_MASSAGE_ROOT() blue::LoggerMgr::GetInstance()->getRoot()
 
 // 用name获取Logger,如果不存在那么输出的位置跟BLUE_LOG_MASSAGE_ROOT() 得到的Logger输出位置一样
-#define BLUE_LOG_NAME(name) blue::LoggerMgr::GetInstance()->GetLogger(name)
+#define BLUE_LOG_NAME(name) blue::LoggerMgr::GetInstance()->getLogger(name)
 
 // 名称空间
 namespace blue
@@ -63,22 +63,100 @@ namespace blue
     {
     public:
         using LogEventPtr = std::shared_ptr<LogEvent>;
+
+        /**
+         * @brief logEvent默认构造函数
+         * @return
+         */
         LogEvent() = default;
+
+        /**
+         * @brief logEvent构造函数
+         * @param logger_pre 日志器智能指针
+         * @param level      日志级别
+         * @param file       文件名称
+         * @param time       时间戳
+         * @param line       行号
+         * @param elapse     系统到现在启动时间
+         * @param threadId   线程ID
+         * @param fiberId    协程ID
+         * @param name       线程名称
+         * @return
+         */
         LogEvent(std::shared_ptr<Logger> logger_ptr, Level level,
                  const char *file, uint64_t time, uint32_t line, uint32_t elapse,
                  uint32_t threadId, uint32_t fiberId, const std::string &name);
 
+        /**
+         * @brief 获取文件名称
+         * @return 文件名称
+         */
         const char *getFilename() const { return m_file; }
+
+        /**
+         * @brief 获取时间戳
+         * @return 时间戳
+         */
         uint64_t getTime() const { return m_time; }
+
+        /**
+         * @brief 获取行号
+         * @return 行号
+         */
         uint32_t getLines() const { return m_lines; }
+
+        /**
+         * @brief 获取系统到现在启动时间
+         * @return 系统到现在启动时间
+         */
         uint32_t getElapse() const { return m_elapse; }
+
+        /**
+         * @brief 获取线程id
+         * @return 线程id
+         */
         uint32_t getThreadId() const { return m_threadID; }
+
+        /**
+         * @brief 获取协程id
+         * @return 协程id
+         */
         uint32_t getFiberId() const { return m_fiberID; }
+
+        /**
+         * @brief 获取线程名称
+         * @return 线程名称
+         */
         const std::string &getThreadName() const { return m_threadname; }
+
+        /**
+         * @brief 获取消息体
+         * @return 内容
+         */
         std::string getContent() const { return m_stringstream.str(); }
+
+        /**
+         * @brief 获取日志器智能指针
+         * @return 日志器智能指针
+         */
         std::shared_ptr<Logger> getLoggerptr() const { return m_logger_ptr; }
+
+        /**
+         * @brief 获取string流,用于输入内容
+         * @return std::stringstream
+         */
         std::stringstream &getstringstream() { return m_stringstream; }
+
+        /**
+         * @brief 获取日志级别
+         * @return level
+         */
         Level getLevel() const { return m_level; }
+
+        /**
+         * @brief 利用fmt输出的辅助函数
+         * @return
+         */
         void format(const char *fmt, ...);
         void format(const char *fmt, va_list al);
 
@@ -110,9 +188,29 @@ namespace blue
     class LogEventWrap
     {
     public:
+        /**
+         * @brief 日志事件的包装类构造函数
+         * @param e 日志事件类智能指针
+         * @return
+         */
         LogEventWrap(LogEvent::LogEventPtr e);
+        /**
+         * @brief 日志事件的包装类析构函数
+         * @param e 日志事件类智能指针
+         * @return
+         * @note 当析构函数发生时,才真正执行对日志的写入
+         */
         ~LogEventWrap();
+
+        /**
+         * @brief 获取event智能指针
+         * @return event智能指针
+         */
         LogEvent::LogEventPtr getEvent() const { return m_event_ptr; }
+        /**
+         * @brief 获取event上的string流
+         * @return string 流
+         */
         std::stringstream &getstringstream();
 
     private:
@@ -124,13 +222,36 @@ namespace blue
     {
     public:
         using LogFormatterPtr = std::shared_ptr<LogFormatter>;
+
+        /**
+         * @brief LogFormatter的构造函数
+         * @param pattern 日志的输出格式
+         * @return
+         * @note 包含对日志输出格式的解析
+         */
         LogFormatter(const std::string &pattern);
+
+        /**
+         * @brief 将event上的内容输出为string,写入输出日志的具体格式内容
+         * @param logger_ptr 日志器智能指针
+         * @param level 日志级别
+         * @param event 日志事件指针
+         * @return string,日志信息
+         */
         std::string format(std::shared_ptr<Logger> logger_ptr, Level level, LogEvent::LogEventPtr event);
+
+        /**
+         * @brief 获取输出格式字符串
+         * @return 输出格式字符串
+         */
         const std::string getPattern() const { return m_pattern; }
-        bool GerHasError() const
-        {
-            return m_HasError.load(std::memory_order_acquire);
-        }
+
+        /**
+         * @brief 获取模式字符串是否有错误
+         * @return 有错误返回true 否则 false
+         * @note 原子操作
+         */
+        bool getHasError() const { return m_HasError.load(std::memory_order_acquire); }
 
     public:
         class FormatterItem
@@ -142,11 +263,16 @@ namespace blue
         };
 
     private:
-        void init(); // 做pattern的解析
+
+        /**
+         * @brief 做输出格式字符串的解析
+         * @return
+         */
+        void _init();
     private:
         std::string m_pattern; // 一旦从构造函数加载好不会再去做修改
         std::vector<FormatterItem::FormatterItemPtr> m_items;
-        std::atomic<bool> m_HasError = false;
+        std::atomic<bool> m_HasError = { false };
     }; // LogFormatter
 
     // 日志输出目的地
@@ -161,12 +287,43 @@ namespace blue
         virtual ~LogAppender() = default;
         virtual std::string toyamlString() = 0;
         virtual void log(std::shared_ptr<Logger> logger_ptr, Level level, LogEvent::LogEventPtr event) = 0;
-        LogFormatter::LogFormatterPtr get_formatter() const;
-        void set_formatter(LogFormatter::LogFormatterPtr formatter);
+
+        /**
+         * @brief 获取formatter指针
+         * @return formatter指针
+         * @note 无锁实现
+         */
+        LogFormatter::LogFormatterPtr getformatter() const;
+
+        /**
+         * @brief 设置formatter指针
+         * @param fomatter 新的formatter指针
+         * @return
+         * @note 无锁实现
+         */
+        void setformatter(LogFormatter::LogFormatterPtr formatter);
+
+        /**
+         * @brief 获取日志级别
+         * @return 日志级别
+         * @note 原子操作
+         */
         Level getLevel() const { return m_level.load(std::memory_order_acquire); }
+
+        /**
+         * @brief 设置日志级别
+         * @param level 新的日志级别
+         * @return
+         * @note 原子操作
+         */
         void setLevel(Level level) { m_level.store(level, std::memory_order_release); }
 
-        const bool gatHasformatter() const { return m_hasformatter; }
+        /**
+         * @brief 获取是否有设置输出格式
+         * @return 有就返回true 否则false
+         * @note 原子操作
+         */
+        const bool gatHasformatter() const { return m_hasformatter.load(std::memory_order_acquire); }
 
     protected:
         mutable MutexType m_mutex;
@@ -183,26 +340,99 @@ namespace blue
     public:
         using LoggerPtr = std::shared_ptr<Logger>;
         using MutexType = blue::MRWmutex;
+
+        /**
+         * @brief 输出日志
+         * @param level 日志级别
+         * @param event 日志事件
+         * @return
+         * @note 无锁实现
+         */
         void Log(Level level, LogEvent::LogEventPtr event);
+
+        /**
+         * @brief 日志构造函数
+         * @param name 日志的名称,默认为root
+         * @return
+         * @note level级别默认为DEBUG,会在构造时设置一个标准的formatter格式
+         */
         Logger(const std::string &name = "root");
+
         void debug(LogEvent::LogEventPtr event);
         void info(LogEvent::LogEventPtr event);
         void warn(LogEvent::LogEventPtr event);
         void error(LogEvent::LogEventPtr event);
         void fatal(LogEvent::LogEventPtr event);
-
+        
+        /**
+         * @brief 将日志信息转为yamlstring
+         * @return yamlstring
+         * @note 将日志名称，日志级别，日志格式，日志输出器内容以无锁形式写入到yaml节点
+         */
         std::string toyamlString();
 
+        /**
+         * @brief 添加日志输出目的地
+         * @param Appender 需要添加的日志输出目的地智能指针
+         * @return 内部含有写锁
+         */
         void addAppender(LogAppender::LogAppenderPtr Appender);
-        void delAppender(LogAppender::LogAppenderPtr Appender);
-        void ClearAppender() noexcept;
 
-        Level get_level() const { return m_level; }
-        void set_level(Level val) { m_level = val; }
+        /**
+         * @brief 删除日志输出目的地
+         * @param Appender 需要删除的日志输出目的地智能指针
+         * @return 内部含有写锁
+         */
+        void delAppender(LogAppender::LogAppenderPtr Appender);
+
+        /**
+         * @brief 清除所有日志输出目的地
+         * @return
+         * @note 内部含有写锁
+         */
+        void clearAppender() noexcept;
+
+        /**
+         * @brief 获取日志级别
+         * @return
+         */
+        Level getlevel() const { return m_level.load(std::memory_order_acquire); }
+
+        /**
+         * @brief 设置日志级别
+         * @param val 需要设置的日志级别
+         * @return
+         */
+        void setlevel(Level val) { m_level.store(val, std::memory_order_release); }
+
+        /**
+         * @brief 获取日志名称
+         * @return
+         */
         const std::string getname() const { return m_name; }
-        void SetFormatter(LogFormatter::LogFormatterPtr rhs);
-        void SetFormatter(const std::string &rhs);
-        LogFormatter::LogFormatterPtr GetFormatter() const;
+
+        /**
+         * @brief 设置日志输出格式
+         * @param rhs 日志输出格式类智能指针
+         * @return
+         * @note 无锁实现，有读锁进行对appender的复制
+         */
+        void setFormatter(LogFormatter::LogFormatterPtr rhs);
+
+        /**
+         * @brief 设置formatter格式,按照string格式字符串
+         * @param rhs 日志输出格式字符串
+         * @return
+         * @note formatter有错误不给予设置,通过调用setFormatter的无锁版本实现
+         */
+        void setFormatter(const std::string &rhs);
+
+        /**
+         * @brief 获取日志输出格式类智能指针
+         * @return 日志输出格式类智能指针
+         * @note 无锁实现
+         */
+        LogFormatter::LogFormatterPtr getFormatter() const;
 
     private:
         mutable MutexType m_mutex;                          // 互斥变量
@@ -220,7 +450,22 @@ namespace blue
         using StdoutLogAppenderPtr = std::shared_ptr<StdoutLogAppender>;
         StdoutLogAppender() = default;
         ~StdoutLogAppender() = default;
+
+        /**
+         * @brief 将控制台的信息转为yaml,最后以字符串输出
+         * @return yamlstring
+         * @note 无锁
+         */
         virtual std::string toyamlString() override;
+
+        /**
+         * @brief 将日志输出到控制台
+         * @param logger_ptr 日志器指针
+         * @param level 日志级别
+         * @param event 日志事件
+         * @return
+         * @note 无锁
+         */
         virtual void log(std::shared_ptr<Logger> logger_ptr, Level level, LogEvent::LogEventPtr event) override;
 
     private:
@@ -234,12 +479,49 @@ namespace blue
         ;
         using FileoutLogAppenderPtr = std::shared_ptr<FileoutLogAppender>;
         FileoutLogAppender() = default;
+
+        /**
+         * @brief 日志输出到文件类的析构函数,执行对文件的关闭
+         * @return
+         */
         ~FileoutLogAppender();
+
+        /**
+         * @brief 日志输出到文件类的构造函数
+         * @param filename 文件名
+         * @return
+         */
         FileoutLogAppender(const std::string &filename);
-        void reopen(); // 重新打开
-        void clear();  // 关闭
-        // 虚函数，实现了一系列将event事件和日志相关信息写入文件的继承方法
+
+        /**
+         * @brief 重新打开文件
+         * @return
+         * @note 有锁
+         */
+        void reopen();
+
+        /**
+         * @brief 清空文件
+         * @return
+         * @note 有锁
+         */
+        void clear();
+
+        /**
+         * @brief 文件信息转为yamlstring,最后以字符串输出
+         * @return yamlstring
+         * @note 无锁
+         */
         virtual std::string toyamlString() override;
+
+        /**
+         * @brief 将event事件和日志相关信息写入文件
+         * @param logger_ptr 日志器智能指针
+         * @param level 日志级别
+         * @param event 日志事件
+         * @return
+         * @note 无锁
+         */
         virtual void log(std::shared_ptr<Logger> logger_ptr, Level level, LogEvent::LogEventPtr event) override;
 
     private:
@@ -255,18 +537,38 @@ namespace blue
     {
     public:
         using MutexType = blue::MRWmutex;
-        // 构造
+        
+        /**
+         * @brief 构造函数,管理一个默认的logger智能指针
+         * @return
+         * @note 设置了默认的appender
+         */
         LoggerManager();
 
-        // 按照名称获取logger
-        Logger::LoggerPtr GetLogger(const std::string &name); // 通过名字查找获取logger
+        /**
+         * @brief 按照名称获取logger
+         * @param name 日志的名称
+         * @return
+         * @note 没有找到name对应的Logger,我们创建一个新的,然后让他输出到跟LoggerManager::m_rootr一样,直到它设置了他自己的Appender
+         */
+        Logger::LoggerPtr getLogger(const std::string &name);
 
-        // 获取root
-        Logger::LoggerPtr GetRoot() const { return m_root; } // 获取root
+        /**
+         * @brief 获取管理的默认的root
+         * @return 日志器的智能指针
+         */
+        Logger::LoggerPtr getRoot() const { return m_root; }
 
-        // 初始化
+        /**
+         * @brief 初始化logManager
+         * @return
+         */
         void init();
 
+        /**
+         * @brief 将loggerManager管理的日志器信息全部转为yaml,最后以字符串输出
+         * @return yamlstring
+         */
         std::string toyamlString();
 
     private:
@@ -289,8 +591,12 @@ namespace blue
     public:
         // 两种静态方法,支持序列化和反序列化,在读取yaml文件时配置起来方便
 
-        // 从level -> string
-        static std::string getlevelstring(Level level)
+        /**
+         * @brief 从level -> string
+         * @param level 日志级别,枚举类型
+         * @return string
+         */
+        static std::string Getlevelstring(Level level)
         {
             switch (level)
             {
@@ -307,8 +613,12 @@ namespace blue
             return "NOKNOW";
         }
 
-        // 从string -> level
-        static blue::Level getstringlevel(const std::string &val)
+        /**
+         * @brief 从string -> level
+         * @param val 日志级别的字符串名称
+         * @return Level,枚举类型
+         */
+        static blue::Level Getstringlevel(const std::string &val)
         {
 #define getlever(name, str)          \
     if (val == #str || val == #name) \

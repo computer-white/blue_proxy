@@ -8,71 +8,130 @@ namespace blue
 {
     class FdCxt : std::enable_shared_from_this<FdCxt>
     {
-        public:
-            using FdCxtPtr = std::shared_ptr<FdCxt>;
-        
-        public:
-            FdCxt(int fd);
-            ~FdCxt();
+    public:
+        using FdCxtPtr = std::shared_ptr<FdCxt>;
 
-            // 初始化
-            bool init();
-            bool isInit() const { return m_isInit; }
-            bool isSocket() const { return m_isSocket; }
-            bool isClosed() const { return m_isClosed; }
+    public:
+        /**
+         * @brief 文件描述符内容构造函数
+         * @param fd 文件描述符句柄
+         * @return
+         */
+        FdCxt(int fd);
 
-            // 获得或者设置用户自己的nonblock
-            bool getUserNonBlock() const { return m_UserNonBlock; }
-            void setUserNonBlock(bool val) { m_UserNonBlock = val; }
+        /**
+         * @brief 文件描述符内容析构函数
+         * @return
+         */
+        ~FdCxt();
 
-            // 获得或者设置系统的nonblock
-            bool getSysNonBlock() const { return m_SysNonBlock; }
-            void setSysNoBlock(bool val) { m_SysNonBlock = val; }
+        /**
+         * @brief 初始化私有变量函数
+         * @return
+         */
+        bool init();
 
-            /*
-                设置超时
-                type : 超时事件类型(读/写)
-                val  : 超时时间(秒)
-            */
-            void setTimeout(int type,uint64_t val);
-            /*
-                获取超时
-                type    : 超时事件类型
-                return  : (超时时间)秒
-            */
-            uint64_t getTimeout(int type);
+        /**
+         * @brief 是否初始化
+         * @return 初始化了返回true 否则返回fasle
+         */
+        bool isInit() const { return m_isInit; }
 
-        private:
-            bool m_isInit : 1;
-            bool m_isSocket : 1;
-            bool m_SysNonBlock : 1;
-            bool m_UserNonBlock : 1;
-            bool m_isClosed : 1;
-            uint64_t m_revTimeout;
-            uint64_t m_sendTimeout;
-            int m_fd;
+        /**
+         * @brief 是否说socket文件描述符
+         * @return 是返回true 否则返回fasle
+         */
+        bool isSocket() const { return m_isSocket; }
+
+        /**
+         * @brief 文件描述符是否被关闭
+         * @return 关闭了返回true 否则返回fasle
+         */
+        bool isClosed() const { return m_isClosed; }
+
+        /**
+         * @brief 获取用户是否自行设置非阻塞
+         * @return 是返回true 否则返回fasle
+         */
+        bool getUserNonBlock() const { return m_UserNonBlock; }
+
+        /**
+         * @brief 设置用户是否自行设置非阻塞
+         * @return
+         */
+        void setUserNonBlock(bool val) { m_UserNonBlock = val; }
+
+        /**
+         * @brief 获取系统是否设置非阻塞
+         * @return 是返回true 否则返回fasle
+         */
+        bool getSysNonBlock() const { return m_SysNonBlock; }
+
+        /**
+         * @brief 设置系统是否自行设置非阻塞
+         * @return
+         */
+        void setSysNoBlock(bool val) { m_SysNonBlock = val; }
+
+        /**
+         * @brief 设置超时
+         * @param type 超时事件类型(读/写)
+         * @param val 超时时间(ms)
+         * @return
+         */
+        void setTimeout(int type, uint64_t val);
+
+        /**
+         * @brief 获取超时
+         * @param type 超时事件类型(读/写)
+         * @param val 超时时间(ms)
+         * @return 超时时间(ms)
+         */
+        uint64_t getTimeout(int type);
+
+    private:
+        bool m_isInit : 1;
+        bool m_isSocket : 1;
+        bool m_SysNonBlock : 1;
+        bool m_UserNonBlock : 1;
+        bool m_isClosed : 1;
+        uint64_t m_revTimeout;
+        uint64_t m_sendTimeout;
+        int m_fd;
     };
     class FdManager
     {
-        public:
-            using MRWmutexType = MRWmutex;
-        public:
-            // FdManager(int fd);
-            FdManager();
-            /*
-                m_datas[fd]存在直接返回.
-                不存在,若auto_create = true,创建新的FdCtx,并返回
-            */
-            FdCxt::FdCxtPtr get(int fd,bool auto_create = false);
-            /*
-                根据fd删除FdCxt
-            */
-            void del(int fd);
+    public:
+        using MRWmutexType = MRWmutex;
 
-        private:
-            MRWmutexType m_mutex;
-            // std::vector<FdCxt::FdCxtPtr> m_datas;   // 按照fd作为数组下标,使用时保证fd不要跨度很大
-            std::unordered_map<int,FdCxt::FdCxtPtr> m_datas;    // 选择使用map存储,fd描述符可能出现不连续
+    public:
+        // FdManager(int fd);
+
+        /**
+         * @brief FdManger构造函数
+         * @return
+         */
+        FdManager();
+
+        /**
+         * @brief 获取文件描述符对应的FdCxt指针
+         * @param fd 文件描述符
+         * @param auto_create true表示没有旧创建新的 默认 fasle
+         * @return FdCxt智能指针
+         */
+        FdCxt::FdCxtPtr get(int fd, bool auto_create = false);
+
+        /**
+         * @brief 根据文件描述符删除FdCxt
+         * @param fd 文件描述符
+         * @return
+         */
+        void del(int fd);
+
+    private:
+        MRWmutexType m_mutex;
+        // std::vector<FdCxt::FdCxtPtr> m_datas;   // 按照fd作为数组下标,使用时保证fd不要跨度很大
+        std::unordered_map<int, FdCxt::FdCxtPtr> m_datas; // 选择使用map存储,fd描述符可能出现不连续
     };
 
     // 单例模式

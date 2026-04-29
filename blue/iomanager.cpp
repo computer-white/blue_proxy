@@ -71,7 +71,7 @@ namespace blue
         epoll_event event;
         memset(&event, 0, sizeof(event));
         event.events = EPOLLIN | EPOLLET; // 边缘触发 EPOLLET
-        event.data.fd = m_ticklefds[0]; // 设置文件描述符
+        event.data.fd = m_ticklefds[0];   // 设置文件描述符
 
         // 设置读文件描述符状态为非阻塞模式(O_NONBLOCK)
         rt = fcntl(m_ticklefds[0], F_SETFL, O_NONBLOCK);
@@ -339,8 +339,8 @@ namespace blue
         {
             return;
         }
-        int rt = write(m_ticklefds[1], "T", 1);
-        BLUE_ASSERT(rt == 1);
+        int rt = write(m_ticklefds[1], "iomanager::tickle", 17);
+        BLUE_ASSERT(rt == 17);
     }
 
     bool IOManager::stopping()
@@ -348,9 +348,7 @@ namespace blue
         // BLUE_LOG_INFO(g_logger) << " m_pendingEventCOunts : " << m_pendingEventCounts
         //                         << " hasTimer : " << TimerManager::hasTimer()
         //                         << " stopping : " << Schedular::stopping();
-        return m_pendingEventCounts == 0 
-        && !TimerManager::hasTimer() 
-        && Schedular::stopping();
+        return m_pendingEventCounts == 0 && !TimerManager::hasTimer() && Schedular::stopping();
     }
 
     void IOManager::idle()
@@ -411,8 +409,12 @@ namespace blue
                 epoll_event &event = epevent[i];
                 if (event.data.fd == m_ticklefds[0])
                 {
-                    uint8_t dummy;
-                    while (read(m_ticklefds[0], &dummy, 1) == 1);
+                    // uint32_t dummy;
+                    char dummy[18];
+                    while (read(m_ticklefds[0], &dummy, 17) == 17)
+                    {
+                        BLUE_LOG_INFO(g_logger) << dummy;
+                    };
                     continue;
                 }
 
@@ -436,7 +438,7 @@ namespace blue
                 {
                     continue;
                 }
-                
+
                 // 把事件拿出来后在epoll里面要么删除要么更改
                 int left_events = (fd_ctx->m_events & ~real_event);
                 int op = left_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;

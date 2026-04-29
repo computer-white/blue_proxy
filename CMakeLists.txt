@@ -15,7 +15,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang
 endif()
 # ===========================
 # 设置C++标准
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ===== 重点：输出目录设置必须在创建目标之前 =====
@@ -39,10 +39,12 @@ include_directories(.)
 
 # 设置源文件变量
 set(LIB_SRC 
+    blue/address.cpp
     blue/config.cpp
     blue/fdmanager.cpp
     blue/fiber.cpp
     blue/hook.cpp
+    blue/httprequest.cpp
     blue/iomanager.cpp
     blue/log.cpp
     blue/mthread.cpp
@@ -102,6 +104,16 @@ endif()
 # 检查源文件是否存在
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/blue/fdmanager.cpp)
     message(FATAL_ERROR "源文件 blue/fdmanager.cpp 不存在！")
+endif()
+
+# 检查源文件是否存在
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/blue/address.cpp)
+    message(FATAL_ERROR "源文件 blue/address.cpp 不存在！")
+endif()
+
+# 检查源文件是否存在
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/blue/httprequest.cpp)
+    message(FATAL_ERROR "源文件 blue/httprequest.cpp 不存在！")
 endif()
 
 # 创建共享库
@@ -190,6 +202,43 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_hook.cpp)
     add_executable(test_hook tests/test_hook.cpp)
     target_link_libraries(test_hook PRIVATE blue ${YAML_CPP} ${PTHREAD})  # 链接动态库
     # target_link_libraries(test_config PRIVATE yaml-cpp)  # 显式链接
+
+    message(STATUS "测试程序已添加")
+else()
+    message(WARNING "tests/test_hook.cpp 不存在，跳过测试程序")
+endif()
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_server.cpp)
+    add_executable(test_server tests/test_server.cpp)
+    target_link_libraries(test_server PRIVATE blue ${YAML_CPP} ${PTHREAD})  # 链接动态库
+    # target_link_libraries(test_config PRIVATE yaml-cpp)  # 显式链接
+
+    message(STATUS "测试程序已添加")
+else()
+    message(WARNING "tests/test_hook.cpp 不存在，跳过测试程序")
+endif()
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_address.cpp)
+    add_executable(test_address tests/test_address.cpp)
+    target_link_libraries(test_address PRIVATE blue ${YAML_CPP} ${PTHREAD})  # 链接动态库
+
+    message(STATUS "测试程序已添加")
+else()
+    message(WARNING "tests/test_hook.cpp 不存在，跳过测试程序")
+endif()
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_interface.cpp)
+    add_executable(test_interface tests/test_interface.cpp)
+    target_link_libraries(test_interface PRIVATE blue ${YAML_CPP} ${PTHREAD})  # 链接动态库
+
+    message(STATUS "测试程序已添加")
+else()
+    message(WARNING "tests/test_hook.cpp 不存在，跳过测试程序")
+endif()
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_ipv4.cpp)
+    add_executable(test_ipv4 tests/test_ipv4.cpp)
+    target_link_libraries(test_ipv4 PRIVATE blue ${YAML_CPP} ${PTHREAD})  # 链接动态库
 
     message(STATUS "测试程序已添加")
 else()

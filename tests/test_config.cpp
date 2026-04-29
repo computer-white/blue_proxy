@@ -83,26 +83,26 @@ void test_YAML()
 
 void test_config()
 {
-    BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "Before : " << g_int_config_ptr->GetValue();
+    BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "Before : " << g_int_config_ptr->getValue();
     BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "before : " << g_float_config_ptr->toString();
 #define YY(g_val_map, name, prefix)                                                                              \
     {                                                                                                            \
-        auto &map_v = g_val_map->GetValue();                                                                     \
+        auto &map_v = g_val_map->getValue();                                                                     \
         for (auto &[key, value] : map_v)                                                                         \
         {                                                                                                        \
             BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << #prefix " " #name "--key: " << key << ",value: " << value; \
         }                                                                                                        \
-        BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << #prefix " " #name "--::YAML-string: \n"                        \
+        BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << #prefix " " #name "--YAML-string: \n"                        \
                                                << g_val_map->toString();                                         \
     }
 #define XX(g_val, name, prefix)                                                           \
     {                                                                                     \
-        auto &v = g_val->GetValue();                                                      \
+        auto &v = g_val->getValue();                                                      \
         for (auto &x : v)                                                                 \
         {                                                                                 \
             BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << #prefix " " #name "--val: " << x;   \
         }                                                                                 \
-        BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << #prefix " " #name "--::YAML-string: \n" \
+        BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << #prefix " " #name "--YAML-string: \n" \
                                                << g_val->toString();                      \
     } // Before
     XX(g_int_vec_config_ptr, int_vec, Before);
@@ -113,7 +113,7 @@ void test_config()
     YY(g_int_unordered_map_config_ptr, str_int_unordered_map, Before);
     YAML::Node root = YAML::LoadFile("/home/blue/c_projects/sylar/bin/cof/test.yml");
     blue::Config::LoadFromYAML(root);
-    BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "After : " << g_int_config_ptr->GetValue();
+    BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "After : " << g_int_config_ptr->getValue();
     BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "After : " << g_float_config_ptr->toString();
 
     // After
@@ -203,12 +203,12 @@ void test_class()
 #define XX_P(g_val, prefix)                                                             \
     {                                                                                   \
         BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << #prefix                               \
-                                               << g_val->GetValue().tostring() << "-\n" \
+                                               << g_val->getValue().tostring() << "-\n" \
                                                << g_val->toString();                    \
     }
 #define XX_P_M(g_val, prefix)                                                                                            \
     {                                                                                                                    \
-        auto &m = g_val->GetValue();                                                                                     \
+        auto &m = g_val->getValue();                                                                                     \
         for (auto &[key, value] : m)                                                                                     \
         {                                                                                                                \
             BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << #prefix " " << "key : " << key << ",value : " << value.tostring(); \
@@ -218,7 +218,7 @@ void test_class()
     }
 #define XX_V_P_M(g_val, prefix)                                                                                          \
     {                                                                                                                    \
-        auto &m = g_val->GetValue();                                                                                     \
+        auto &m = g_val->getValue();                                                                                     \
         for (auto &[key, vec_val] : m)                                                                                   \
         {                                                                                                                \
             for (auto &p : vec_val)                                                                                      \
@@ -264,7 +264,7 @@ static void LoadYaml()
               << blue::LoggerMgr::GetInstance()->toyamlString() << std::endl;
     
     // 修改 formatter（只执行一次）
-    system_logger->SetFormatter("%d -- %m%n");
+    system_logger->setFormatter("%d -- %m%n");
 }
 
 void test_log()
@@ -292,7 +292,7 @@ void test_log()
     //               << blue::LoggerMgr::GetInstance()->toyamlString() << std::endl;
         
     //     // 修改 formatter（只执行一次）
-    //     system_logger->SetFormatter("%d -- %m%n");
+    //     system_logger->setFormatter("%d -- %m%n");
     // });
     
     // 使用pthread_once
@@ -325,9 +325,9 @@ int main(int argc, char *argv[])
     }
     
     blue::Config::Visit([](blue::ConfigVarBase::ConfigVarBasePtr cb){
-        BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "name : " << cb->GetName()
-                                               << " description : " << cb->GetDescription()
-                                               << " typename : " << cb->GetTypeName()
+        BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "name : " << cb->getName()
+                                               << " description : " << cb->getDescription()
+                                               << " typename : " << cb->getTypeName()
                                                << " value : " << cb->toString();
 });
     return 0;
@@ -575,7 +575,7 @@ int main(int argc, char *argv[])
 //     for (int level_threshold = 0; level_threshold <= 3; level_threshold++) {
 //         // 设置日志级别
 //         auto logger = BLUE_LOG_NAME("system");
-//         logger->set_level(static_cast<blue::Level>(level_threshold));
+//         logger->setlevel(static_cast<blue::Level>(level_threshold));
         
 //         BenchmarkStats stats;
 //         auto start = std::chrono::high_resolution_clock::now();

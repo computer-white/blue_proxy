@@ -18,20 +18,53 @@ namespace blue
     {
     public:
         using ConfigVarBasePtr = std::shared_ptr<ConfigVarBase>;
+        /**
+         * @brief 配置基类的构造函数
+         * @param name 配置名称
+         * @param description 配置的描述
+         * @return
+         */
         ConfigVarBase(const std::string &name, const std::string &description = "") : m_name(name), m_description(description)
         {
             std::transform(m_name.begin(), m_name.end(), m_name.begin(), [](unsigned char x)
                            { return std::tolower(x); });
         }
+
+        /**
+         * @brief 配置基类的虚析构函数
+         * @return
+         */
         virtual ~ConfigVarBase() = default;
 
-        const std::string &GetName() const { return m_name; }
-        const std::string &GetDescription() const { return m_description; }
-        // 纯虚函数,支持序列化和反序列化
+        /**
+         * @brief 获取配置的名称
+         * @return 配置的名称
+         */
+        const std::string &getName() const { return m_name; }
+
+        /**
+         * @brief 获取配置的描述
+         * @return 配置的描述
+         */
+        const std::string &getDescription() const { return m_description; }
+
+        /**
+         * @brief 纯虚函数,支持序列化(类型T转string)
+         * @return
+         */
         virtual std::string toString() = 0;
+
+        /**
+         * @brief 纯虚函数,支持反序列化(string转到类型T)
+         * @return
+         */
         virtual bool fromString(const std::string &val) = 0;
-        // 如果有报错,支持得到类型名称
-        virtual std::string GetTypeName() const = 0;
+
+        /**
+         * @brief 如果有报错,支持得到类型名称
+         * @return 错误类型名称
+         */
+        virtual std::string getTypeName() const = 0;
 
     protected:
         std::string m_name;        // 配置名称
@@ -300,12 +333,29 @@ namespace blue
         using RWmutexType = blue::MRWmutex;
         using ConfigVarPtr = std::shared_ptr<ConfigVar<T>>;                           // 智能指针
         using on_change_cb = std::function<void(const T &old_val, const T &new_val)>; // 回调函数
+
+        /**
+         * @brief 配置派生类构造函数
+         * @param name 配置名称
+         * @param default_val 默认的T类型的值
+         * @param description 对配置的描述
+         * @return
+         */
         ConfigVar(const std::string &name, const T &default_val,
                   const std::string &description) : ConfigVarBase(name, description), m_val(default_val)
         {
         }
+
+        /**
+         * @brief 配置派生类析构函数
+         * @return
+         */
         ~ConfigVar() override = default;
-        // 转换为string类型
+
+        /**
+         * @brief 配置类的主要函数,将T类型转换为string类型(序列化)
+         * @return 返回序列化后的string
+         */
         virtual std::string toString() override
         {
             try
@@ -321,13 +371,17 @@ namespace blue
             }
             return std::string();
         }
-        // 转回m_val
+
+        /**
+         * @brief 配置类的主要函数,将string类型转换为T类型(反序列化)
+         * @return 成功返回true
+         */
         virtual bool fromString(const std::string &val) override
         {
             try
             {
                 // m_val = boost::lexical_cast<T>(val);
-                SetValue(FromStr()(val));
+                setValue(FromStr()(val));
                 return true;
             }
             catch (std::exception &e)
@@ -337,20 +391,31 @@ namespace blue
             }
             return false;
         }
-        const T GetValue() const // 返回m_val
+
+        /**
+         * @brief 获取T类型的值
+         * @return 值
+         */
+        const T getValue() const
         {
             RWmutexType::ReadlockSco lock(m_mutex);
-            return m_val; 
+            return m_val;
         }
 
-        void SetValue(const T &new_val)            // 设置m_val
+        /**
+         * @brief 设置T类型的值
+         * @return
+         * @note 支持回调,当原本在旧值上设立回调函数时,并且新值与旧值不同会触发回调函数
+         */
+        void setValue(const T &new_val)
         {
             {
                 RWmutexType::ReadlockSco lock(m_mutex);
-                if (new_val == m_val) {
-                    return;  // 值未变，直接返回
+                if (new_val == m_val)
+                {
+                    return; // 值未变，直接返回
                 }
-            }  // 读锁释放
+            } // 读锁释放
             T old_val;
             {
                 RWmutexType::WritelockSco lock(m_mutex);
@@ -360,17 +425,27 @@ namespace blue
                 }
                 old_val = m_val;
                 m_val = new_val;
-            }  // 写锁释放
+            } // 写锁释放
 
             // 调用func回调函数(监听器)来通知配置的值已经被更改
-            for (auto &[key, func] : m_mapfunc) {
+            for (auto &[key, func] : m_mapfunc)
+            {
                 func(old_val, m_val);
             }
         }
-        virtual std::string GetTypeName() const override { return typeid(T).name(); } // 返回T的类型
 
-        // 设置监听器,配置被更改后需要做出一些操作,一般是更新删除修改
-        uint64_t addListener(on_change_cb cb) // 添加监听器
+        /**
+         * @brief 获取错误类型的名称
+         * @return 错误类型的名称
+         */
+        virtual std::string getTypeName() const override { return typeid(T).name(); } // 返回T的类型
+
+        /**
+         * @brief 设置监听器,配置被更改后需要做出一些操作,一般是更新删除修改
+         * @param cb 回调监听函数
+         * @return 监听器的id
+         */
+        uint64_t addListener(on_change_cb cb)
         {
             static uint64_t s_fun_id = 0; // 静态局部变量的初始化是线程安全的
             RWmutexType::WritelockSco lock(m_mutex);
@@ -379,8 +454,12 @@ namespace blue
             return s_fun_id;
         }
 
-        // 删除监听器
-        bool delListener(uint64_t key) // 删除监听
+        /**
+         * @brief 删除监听器
+         * @param key 监听器id
+         * @return
+         */
+        bool delListener(uint64_t key)
         {
             auto it = m_mapfunc.find(key);
             RWmutexType::WritelockSco lock(m_mutex);
@@ -392,7 +471,11 @@ namespace blue
             return false;
         }
 
-        // 获取监听器
+        /**
+         * @brief 获取监听器
+         * @param key 监听器id
+         * @return 监听器函数
+         */
         on_change_cb getListener(uint64_t key)
         {
             RWmutexType::ReadlockSco lock(m_mutex);
@@ -400,7 +483,10 @@ namespace blue
             return it == m_mapfunc.end() ? nullptr : it->second;
         }
 
-        // 清空监听器
+        /**
+         * @brief 清空监听器
+         * @return
+         */
         void clearListener()
         {
             RWmutexType::WritelockSco lock(m_mutex);
@@ -423,13 +509,17 @@ namespace blue
         using ConfigVarMaps = std::map<std::string, ConfigVarBase::ConfigVarBasePtr>;
         using RWmutexType = blue::MRWmutex;
 
-        // 只查找配置名称，不创建
+        /**
+         * @brief 只查找配置名称
+         * @param name 配置名称
+         * @return 返回一个配置模板派生类智能指针
+         */
         template <class T>
         static typename ConfigVar<T>::ConfigVarPtr Lookup(const std::string &name)
         {
-            static auto &m_datas = getConfigVarMaps();
+            static auto &m_datas = _GetConfigVarMaps();
             {
-                RWmutexType::ReadlockSco lock(GetMutex());
+                RWmutexType::ReadlockSco lock(_GetMutex());
                 auto it = m_datas.find(name);
                 if (it != m_datas.end())
                 {
@@ -445,12 +535,18 @@ namespace blue
             }
         }
 
-        // 查找配置名称,没有就创建
+        /**
+         * @brief 查找配置名称,没有就创建
+         * @param name 配置名称
+         * @param default_val 模板类型T的默认值
+         * @param description 对配置的说明
+         * @return 返回一个配置模板派生类智能指针
+         */
         template <class T>
         static typename ConfigVar<T>::ConfigVarPtr Lookup(const std::string &name,
                                                           const T &default_value,
                                                           const std::string &description = "")
-        {   
+        {
             // 验证名称合法性
             if (name.empty() || name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789") != std::string::npos)
             {
@@ -458,9 +554,9 @@ namespace blue
                     << "Lookup name invalid: [" << name << "]";
                 throw std::invalid_argument(name);
             }
-            static auto &m_datas = getConfigVarMaps();
+            static auto &m_datas = _GetConfigVarMaps();
             {
-                RWmutexType::ReadlockSco lock(GetMutex());
+                RWmutexType::ReadlockSco lock(_GetMutex());
                 auto it = m_datas.find(name);
                 if (it != m_datas.end())
                 {
@@ -468,13 +564,13 @@ namespace blue
                     if (config_var)
                     {
                         BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "Lookup name is ["
-                                                            << name << "] exists";
+                                                               << name << "] exists";
                         return config_var;
                     }
                     // 如果转化失败，说明类型不匹配，返回nullptr
                     BLUE_LOG_ERROR(BLUE_LOG_MASSAGE_ROOT())
                         << "Lookup name is " << name << " exists but type mismatch " << "this type is : " << typeid(T).name() << " "
-                        << "the real type is " << it->second->GetTypeName() << " "
+                        << "the real type is " << it->second->getTypeName() << " "
                         << "the string is " << it->second->toString();
                     return nullptr;
                 }
@@ -485,7 +581,7 @@ namespace blue
                 std::make_shared<ConfigVar<T>>(name, default_value, description);
             {
                 auto it = m_datas.find(name);
-                RWmutexType::WritelockSco lock(GetMutex());
+                RWmutexType::WritelockSco lock(_GetMutex());
                 // 再次判断
                 // auto it = m_datas.find(name);
                 if (it != m_datas.end())
@@ -494,13 +590,13 @@ namespace blue
                     if (config_var)
                     {
                         BLUE_LOG_INFO(BLUE_LOG_MASSAGE_ROOT()) << "Lookup name is ["
-                                                            << name << "] exists";
+                                                               << name << "] exists";
                         return config_var;
                     }
                     // 如果转化失败，说明类型不匹配，返回nullptr
                     BLUE_LOG_ERROR(BLUE_LOG_MASSAGE_ROOT())
                         << "Lookup name is " << name << " exists but type mismatch " << "this type is : " << typeid(T).name() << " "
-                        << "the real type is " << it->second->GetTypeName() << " "
+                        << "the real type is " << it->second->getTypeName() << " "
                         << "the string is " << it->second->toString();
                     return nullptr;
                 }
@@ -509,23 +605,45 @@ namespace blue
             }
         }
 
-        // 加载配置,支持对从.yml中加载出来的root进行
-        static void LoadFromYAML(const ::YAML::Node &root);
-        
-        // 按照名称查找基类指针
+        /**
+         * @brief  加载配置,支持对从.yml中加载出来的root进行
+         * @param root yaml节点
+         * @return
+         */
+        static void LoadFromYAML(const YAML::Node &root);
+
+        /**
+         * @brief 按照名称查找基类指针
+         * @param name 配置的名称
+         * @return 配置基类指针
+         */
         static ConfigVarBase::ConfigVarBasePtr LookUpBase(const std::string &name);
 
         // 拿出m_datas数据来检查
+        /**
+         * @brief 取出存储在配置名称和配置信息的maps中的配置信息的内容做检查
+         * @param cb 检查配置信息的函数
+         * @return
+         */
         static void Visit(std::function<void(ConfigVarBase::ConfigVarBasePtr)> cb);
+
     private:
-        
-        // 必须返回引用或指针,否则相当于每次调用修改的是副本导致错误(他妈的，让我改了一个多小时)
-        static ConfigVarMaps &getConfigVarMaps()
+        /**
+         * @brief 获取静态map数据,存放着配置的名称以及配置基类指针
+         * @return m_datas
+         * @note 必须返回引用或指针,否则相当于每次调用修改的是副本导致错误(他妈的，让我改了一个多小时)
+         */
+        static ConfigVarMaps &_GetConfigVarMaps()
         {
             static ConfigVarMaps m_datas;
             return m_datas;
         }
-        static RWmutexType& GetMutex()
+
+        /**
+         * @brief 获取静态的互斥变量
+         * @return RWmutexType
+         */
+        static RWmutexType &_GetMutex()
         {
             static RWmutexType s_mutex;
             return s_mutex;

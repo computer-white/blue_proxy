@@ -9,77 +9,77 @@
 #include <type_traits>
 namespace blue
 {
-    #if __cplusplus >= 202002L
-        template <typename T>
-        T bitswap(T val)
-        {
-            if constexpr (sizeof(T) == 8)
-                return (T)__bswap_64((uint64_t)val);
-            else if constexpr (sizeof(T) == 4)
-                return (T)__bswap_32((uint32_t)val);
-            else if constexpr (sizeof(T) == 2)
-                return (T)__bswap_16((uint16_t)val);
-            else
-                static_assert(sizeof(T) == 0, "bitswap only supports 2/4/8 byte types");
-        }
-    #else
-        template <typename T>
-        std::enable_if_t<std::is_unsigned_v<T> && sizeof(T) == sizeof(uint64_t),T>
-        bitswap(T val)
-        {
+#if __cplusplus >= 202002L
+    template <typename T>
+    T bitswap(T val)
+    {
+        if constexpr (sizeof(T) == 8)
             return (T)__bswap_64((uint64_t)val);
-        }
-
-        template <typename T>
-        std::enable_if_t<std::is_unsigned_v<T> && sizeof(T) == sizeof(uint32_t),T>
-        bitswap(T val)
-        {
+        else if constexpr (sizeof(T) == 4)
             return (T)__bswap_32((uint32_t)val);
-        }
-
-        template <typename T>
-        std::enable_if_t<std::is_unsigned_v<T> && sizeof(T) == sizeof(uint16_t),T>
-        bitswap(T val)
-        {
+        else if constexpr (sizeof(T) == 2)
             return (T)__bswap_16((uint16_t)val);
-        }
-    #endif
+        else
+            static_assert(sizeof(T) == 0, "bitswap only supports 2/4/8 byte types");
+    }
+#else
+    template <typename T>
+    std::enable_if_t<std::is_unsigned_v<T> && sizeof(T) == sizeof(uint64_t), T>
+    bitswap(T val)
+    {
+        return (T)__bswap_64((uint64_t)val);
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_unsigned_v<T> && sizeof(T) == sizeof(uint32_t), T>
+    bitswap(T val)
+    {
+        return (T)__bswap_32((uint32_t)val);
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_unsigned_v<T> && sizeof(T) == sizeof(uint16_t), T>
+    bitswap(T val)
+    {
+        return (T)__bswap_16((uint16_t)val);
+    }
+#endif
 
 // 检测系统字节序
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    #define BLUE_BYTE_ORDER BLUE_BIG_ENDIAN
+#define BLUE_BYTE_ORDER BLUE_BIG_ENDIAN
 #else
-    #define BLUE_BYTE_ORDER BLUE_LITTLE_ENDIAN
+#define BLUE_BYTE_ORDER BLUE_LITTLE_ENDIAN
 #endif
 
     // 根据系统字节序提供转换函数
 #if BLUE_BYTE_ORDER == BLUE_BIG_ENDIAN
     // 网络转主机
     template <typename T>
-    T bitswapToLittleEndian(T val)
+    T bitswapnToh(T val)
     {
         return val;
     }
 
     // 主机转网络
     template <typename T>
-    T bitswapToBigEndian(T val)
+    T bitswaphToh(T val)
     {
         return val;
     }
 #else
     // 网络转主机
     template <typename T>
-    T bitswapToLittleEndian(T val)
+    T bitswapnToh(T val)
     {
-        return bitswap(val);            
+        return bitswap(val);
     }
 
     // 主机转网络
     template <typename T>
-    T bitswapToBigEndian(T val)
+    T bitswaphTon(T val)
     {
-        return bitswap(val);  
+        return bitswap(val);
     }
 #endif
 

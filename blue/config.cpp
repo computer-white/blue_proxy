@@ -5,8 +5,8 @@ namespace blue
     ConfigVarBase::ConfigVarBasePtr Config::LookUpBase(const std::string &name)
     {
         // 从全局m_datas里面按照名称查找
-        static auto &m_datas = getConfigVarMaps();
-        RWmutexType::ReadlockSco lock(GetMutex());
+        static auto &m_datas = _GetConfigVarMaps();
+        RWmutexType::ReadlockSco lock(_GetMutex());
         auto it = m_datas.find(name);
         return it == m_datas.end() ? nullptr : it->second;
     }
@@ -70,12 +70,11 @@ namespace blue
         }
     }
 
-    
     void Config::Visit(std::function<void(ConfigVarBase::ConfigVarBasePtr)> cb)
     {
-        RWmutexType::ReadlockSco lock(GetMutex());
-        ConfigVarMaps& m =  getConfigVarMaps();
-        for (auto&[key,val] : m)
+        RWmutexType::ReadlockSco lock(_GetMutex());
+        ConfigVarMaps &m = _GetConfigVarMaps();
+        for (auto &[key, val] : m)
         {
             cb(val);
         }
