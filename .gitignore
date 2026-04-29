@@ -37,6 +37,9 @@ Makefile
 *~
 .DS_Store
 
+# 测试文件
+.tests/*.cpp
+
 # 日志文件
 *.log
 
