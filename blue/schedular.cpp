@@ -14,7 +14,7 @@ namespace blue
         : m_name(name)
     {
         BLUE_ASSERT(threads > 0);
-        
+
         // true : 表示所有线程(threads)都工作
         if (use_caller)
         {
@@ -28,7 +28,7 @@ namespace blue
             // 设置当前线程调度器指针
             t_schedularptr = this;
             // 设置调度器的主协程(线程主协程的子协程)
-            m_mainfiber.reset(new blue::Fiber(std::bind(&Schedular::run, this),use_caller));
+            m_mainfiber.reset(new blue::Fiber(std::bind(&Schedular::run, this), use_caller));
             // 设置线程名称
             blue::Mthread::SetThreadName(m_name);
             // 设置调度器的静态主协程
@@ -137,7 +137,8 @@ namespace blue
 
         // 调度器的主协程(线程主协程的子协程)tickle
         // 如果有主调度器协程，也需要唤醒
-        if (m_mainfiber) {
+        if (m_mainfiber)
+        {
             tickle();
             // // 只在有任务且未停止时才切换(2026-4-12修改了swapIn,swapOut的逻辑，不再去使用if,else在swap和call,back之间来回)\
             切换,故而之前所有的协程上下文异常都是这个判断导致的,现在也无需这样写了
@@ -158,7 +159,7 @@ namespace blue
             MmutexType::lockSco lock(m_mutex);
             thr.swap(m_threads);
         }
-        for (auto& it : thr)
+        for (auto &it : thr)
         {
             it->join();
         }
@@ -188,7 +189,7 @@ namespace blue
             // t_mainfiber具有线程局部性,每个线程各持有一份，不会互相影响
             t_mainfiber = blue::Fiber::GetThis().get();
         }
-        
+
         // 休闲fiber
         blue::Fiber::FiberPtr idle_fiber = std::make_shared<blue::Fiber>(std::bind(&Schedular::idle, this));
 
@@ -234,7 +235,7 @@ namespace blue
                 ft.fiber->getStatus() != blue::Fiber::Status::EXCEPT)
             {
                 ft.fiber->swapIn();
-                m_activeThreadCounts.fetch_sub(1,std::memory_order_acq_rel);
+                m_activeThreadCounts.fetch_sub(1, std::memory_order_acq_rel);
                 // BLUE_LOG_INFO(g_logger) << "--active (cb), now=" << m_activeThreadCounts.load();
                 if (ft.fiber->getStatus() == blue::Fiber::Status::READY)
                 {
@@ -258,9 +259,9 @@ namespace blue
                     cb_fiber.reset(new blue::Fiber(ft.cb));
                 }
                 // ft.reset();
-                
+
                 cb_fiber->swapIn();
-                m_activeThreadCounts.fetch_sub(1,std::memory_order_acq_rel);    
+                m_activeThreadCounts.fetch_sub(1, std::memory_order_acq_rel);
                 // BLUE_LOG_INFO(g_logger) << "--active (cb), now=" << m_activeThreadCounts.load();
                 if (cb_fiber->getStatus() == blue::Fiber::Status::READY)
                 {
@@ -278,10 +279,11 @@ namespace blue
                     cb_fiber.reset();
                 }
             }
-            else{
+            else
+            {
                 if (has_task)
                 {
-                    m_activeThreadCounts.fetch_sub(1,std::memory_order_acq_rel);
+                    m_activeThreadCounts.fetch_sub(1, std::memory_order_acq_rel);
                     continue;
                 }
                 if (idle_fiber->getStatus() == blue::Fiber::Status::TERM)
@@ -290,9 +292,9 @@ namespace blue
                                             << idle_fiber->getId();
                     break;
                 }
-                m_idleThreadCounts.fetch_add(1,std::memory_order_acq_rel);
+                m_idleThreadCounts.fetch_add(1, std::memory_order_acq_rel);
                 idle_fiber->swapIn();
-                m_idleThreadCounts.fetch_sub(1,std::memory_order_acq_rel);
+                m_idleThreadCounts.fetch_sub(1, std::memory_order_acq_rel);
                 if (idle_fiber->getStatus() != blue::Fiber::Status::TERM &&
                     idle_fiber->getStatus() != blue::Fiber::Status::EXCEPT)
                 {
@@ -317,10 +319,10 @@ namespace blue
             no_fibers = m_fibers.empty();
         }
         bool result = m_autoStopping.load(std::memory_order_acquire) &&
-                    m_stopping.load(std::memory_order_acquire) &&
-                    no_fibers &&
-                    m_activeThreadCounts.load(std::memory_order_acquire) == 0;
-        
+                      m_stopping.load(std::memory_order_acquire) &&
+                      no_fibers &&
+                      m_activeThreadCounts.load(std::memory_order_acquire) == 0;
+
         // static thread_local bool last_result = false;
         // if (last_result != result) {
         //     BLUE_LOG_INFO(g_logger) << "stopping changed: " << last_result << " -> " << result
@@ -328,7 +330,7 @@ namespace blue
         //                             << ", empty=" << no_fibers;
         //     last_result = result;
         // }
-        
+
         return result;
     }
 

@@ -4,7 +4,7 @@
 #include "log.h"
 #include "macro.h"
 namespace blue
-{   
+{
     static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
 
     // 用于set内部排序的 重载函数
@@ -36,7 +36,7 @@ namespace blue
         m_next = blue::GetCurrentMsbyc() + m_ms;
     }
 
-    Timer::Timer(uint64_t next) : m_next(next){}
+    Timer::Timer(uint64_t next) : m_next(next) {}
 
     /*-------------------- private --------------------*/
 
@@ -48,7 +48,7 @@ namespace blue
     }
 
     std::shared_ptr<Timer> Timer::Create_by_ms(uint64_t ms, std::function<void()> cb,
-                                         bool recurring, TimerManager *manager)
+                                               bool recurring, TimerManager *manager)
     {
         return std::shared_ptr<Timer>(new Timer(ms, cb, recurring, manager));
     }
@@ -227,7 +227,7 @@ namespace blue
             }
         }
         MRWmutexType::WritelockSco lock(m_mutex);
-        if(m_timers.empty())
+        if (m_timers.empty())
         {
             return;
         }

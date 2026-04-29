@@ -263,16 +263,16 @@ namespace blue
         };
 
     private:
-
         /**
          * @brief 做输出格式字符串的解析
          * @return
          */
         void _init();
+
     private:
         std::string m_pattern; // 一旦从构造函数加载好不会再去做修改
         std::vector<FormatterItem::FormatterItemPtr> m_items;
-        std::atomic<bool> m_HasError = { false };
+        std::atomic<bool> m_HasError = {false};
     }; // LogFormatter
 
     // 日志输出目的地
@@ -363,7 +363,7 @@ namespace blue
         void warn(LogEvent::LogEventPtr event);
         void error(LogEvent::LogEventPtr event);
         void fatal(LogEvent::LogEventPtr event);
-        
+
         /**
          * @brief 将日志信息转为yamlstring
          * @return yamlstring
@@ -537,7 +537,7 @@ namespace blue
     {
     public:
         using MutexType = blue::MRWmutex;
-        
+
         /**
          * @brief 构造函数,管理一个默认的logger智能指针
          * @return
