@@ -1,6 +1,7 @@
 #include "blue/blue.h"
 #include <assert.h>
 blue::Logger::LoggerPtr g_logger = BLUE_LOG_MASSAGE_ROOT();
+
 void test_assert()
 {
     // BLUE_LOG_INFO(g_logger) << blue::BacktraceToString(10);

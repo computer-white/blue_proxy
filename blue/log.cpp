@@ -502,12 +502,10 @@ namespace blue
         return formatter;
     }
 
-
     FileoutLogAppender::FileoutLogAppender(const std::string &filename) : m_filename(filename)
     {
         reopen();
     }
-
 
     FileoutLogAppender::~FileoutLogAppender()
     {
@@ -567,7 +565,6 @@ namespace blue
             m_filestream.flush();
         }
     }
-
 
     void FileoutLogAppender::clear()
     {
@@ -1190,9 +1187,9 @@ namespace blue
                                                                            std::set<LogDefine>(),
                                                                            "logs LogDefine");
 
-    struct LogIniter
+    struct __LogIniter__
     {
-        LogIniter()
+        __LogIniter__()
         {
             // 添加监听器,同时读取内容设置到日志系统里面
             g_logDefine_config_ptr->addListener([](const std::set<LogDefine> &old_val,
@@ -1307,7 +1304,7 @@ namespace blue
     }
 
     // 全局变量,再main函数之前就会被创建(调用构造函数)
-    static LogIniter __Log_Initer__;
+    static __LogIniter__ __S_Log_Initer__;
     void LoggerManager::init() {}
 
 }

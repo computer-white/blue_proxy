@@ -11,7 +11,7 @@ namespace blue
 	static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
 
 	static blue::ConfigVar<int>::ConfigVarPtr g_tcp_connect_timeout =
-		blue::Config::Lookup<int>("tcp.connect.timeout", 10000, "tcp connect timeout");
+		blue::Config::Lookup<int>("tcp.connect.timeout", 10000u, "tcp connect timeout");
 
 	static thread_local bool t_hook_enable = false;
 #define HOOK_FUNC(XX) \
@@ -51,9 +51,9 @@ namespace blue
 	}
 	static uint64_t s_connect_timeout = -1;
 	// ----main函数前会进行初始化
-	struct _HookIniter
+	struct __HookIniter__
 	{
-		_HookIniter()
+		__HookIniter__()
 		{
 			hook_initial();
 			s_connect_timeout = g_tcp_connect_timeout->getValue();
@@ -66,7 +66,7 @@ namespace blue
 		}
 	};
 
-	static _HookIniter s_hook_initer;
+	static __HookIniter__ __S_Hook_Initer__;
 	// ----main函数前会进行初始化
 
 	// 是否hook
@@ -123,7 +123,7 @@ namespace blue
 			return func(fd, std::forward<Args>(args)...);
 		}
 
-		BLUE_LOG_INFO(g_logger) << hook_func_name << " hook successful";
+		// BLUE_LOG_INFO(g_logger) << hook_func_name << " hook successful";
 
 		uint64_t timeout = ctx->getTimeout(timeout_sok_type);
 
@@ -181,7 +181,7 @@ namespace blue
 				{
 					// 提交成功就让出cpu,再次回来后要么epoll唤醒说明有数据可以操作了,要么被定时器唤醒(失败)
 					blue::Fiber::YieldToHold();
-					BLUE_LOG_INFO(g_logger) << hook_func_name << "YieldToHold has been come back";
+					// BLUE_LOG_INFO(g_logger) << hook_func_name << "YieldToHold has been come back";
 					/*
 						cpu让出后,再一次回来了.如果定时器还存在就取消这时设置的定时器,
 						如果timerinfo->cancelled有值,说明我们提交的定时任务在我们让出
@@ -193,7 +193,7 @@ namespace blue
 					*/
 					if (timer)
 					{
-						BLUE_LOG_INFO(g_logger) << hook_func_name << " YieldToHold After, cancel timer";
+						// BLUE_LOG_INFO(g_logger) << hook_func_name << " YieldToHold After, cancel timer";
 						timer->cancel();
 					}
 					// 被定时器唤醒了
@@ -219,7 +219,7 @@ namespace blue
 		blue::FdCxt::FdCxtPtr cxt = blue::FdManagerPtr::GetInstance()->get(sockfd);
 		if (!cxt || cxt->isClosed())
 		{
-			// BLUE_LOG_INFO(g_logger) << "connect not cxt or isclosed";
+			BLUE_LOG_INFO(g_logger) << "connect not cxt or isclosed";
 			errno = EBADF;
 			return -1;
 		}
@@ -234,7 +234,7 @@ namespace blue
 			// BLUE_LOG_INFO(g_logger) << "nonblock has been set up";
 			return connect_f(sockfd, addr, len);
 		}
-		BLUE_LOG_INFO(g_logger) << "connect hook successful";
+		// BLUE_LOG_INFO(g_logger) << "connect hook successful";
 		int n = connect_f(sockfd, addr, len);
 		if (n == 0)
 		{
@@ -262,7 +262,7 @@ namespace blue
 					{
 						return;
 					}
-					BLUE_LOG_INFO(g_logger) << "connect event will be canceled";
+					// BLUE_LOG_INFO(g_logger) << "connect event will be canceled";
 					sharPtr->cancelled.store(ETIMEDOUT,std::memory_order_release);
 					im->cancelEvent(fd,blue::IOManager::Event::WRITE); }, weak_timerinfo);
 		}
@@ -282,7 +282,7 @@ namespace blue
 		{
 			// 提交成功就让出cpu,再次回来后要么epoll提醒成功connext,要么被定时器唤醒(失败)
 			blue::Fiber::YieldToHold();
-			BLUE_LOG_INFO(g_logger) << "connect with timeout YieldToHold has been come back";
+			// BLUE_LOG_INFO(g_logger) << "connect with timeout YieldToHold has been come back";
 			/*
 				cpu让出后,再一次回来了.如果定时器还存在就取消这时设置的定时器,
 				如果timerinfo->cancelled有值,说明我们提交的定时任务在我们让出
@@ -291,7 +291,7 @@ namespace blue
 			*/
 			if (timer)
 			{
-				BLUE_LOG_INFO(g_logger) << "connect YieldToHold After, cancel timer";
+				// BLUE_LOG_INFO(g_logger) << "connect YieldToHold After, cancel timer";
 				timer->cancel();
 			}
 			if (timerinfo->cancelled.load(std::memory_order_acquire))
@@ -327,7 +327,7 @@ namespace blue
 		{
 			if (!blue::is_hook_enable())
 			{
-				BLUE_LOG_INFO(g_logger) << "sleep_f(seconds)";
+				// BLUE_LOG_INFO(g_logger) << "sleep_f(seconds)";
 				return sleep_f(seconds);
 			}
 			blue::Fiber::FiberPtr fiber = blue::Fiber::GetThis();
@@ -336,7 +336,7 @@ namespace blue
 			{
 				return sleep_f(seconds);
 			}
-			BLUE_LOG_INFO(g_logger) << "sleep hook successfuly";
+			// BLUE_LOG_INFO(g_logger) << "sleep hook successfuly";
 			iom->addTimer(seconds * 1000, [f = fiber, im = iom]()
 						  { im->schedule(f); });
 			blue::Fiber::YieldToHold();
@@ -348,7 +348,7 @@ namespace blue
 		{
 			if (!blue::is_hook_enable())
 			{
-				BLUE_LOG_INFO(g_logger) << "usleep_f(seconds)";
+				// BLUE_LOG_INFO(g_logger) << "usleep_f(seconds)";
 				return usleep_f(usec);
 			}
 			blue::Fiber::FiberPtr fiber = blue::Fiber::GetThis();
@@ -357,7 +357,7 @@ namespace blue
 			{
 				return usleep_f(usec);
 			}
-			BLUE_LOG_INFO(g_logger) << "usleep hook successfuly";
+			// BLUE_LOG_INFO(g_logger) << "usleep hook successfuly";
 			iom->addTimer((usec + 999) / 1000, [im = iom, f = fiber]()
 						  { im->schedule(f); });
 			blue::Fiber::YieldToHold();
@@ -369,7 +369,7 @@ namespace blue
 		{
 			if (!blue::is_hook_enable())
 			{
-				BLUE_LOG_INFO(g_logger) << "nanosleep_f(seconds)";
+				// BLUE_LOG_INFO(g_logger) << "nanosleep_f(seconds)";
 				return nanosleep_f(req, rem);
 			}
 			uint64_t time_out = req->tv_sec * 1000 + (req->tv_nsec + 999999) / 1000000;
@@ -379,7 +379,7 @@ namespace blue
 			{
 				return nanosleep_f(req, rem);
 			}
-			BLUE_LOG_INFO(g_logger) << "nanosleep hook successfuly";
+			// BLUE_LOG_INFO(g_logger) << "nanosleep hook successfuly";
 			iom->addTimer(time_out, [im = iom, f = fiber]()
 						  { im->schedule(f); });
 			blue::Fiber::YieldToHold();
@@ -401,7 +401,7 @@ namespace blue
 				return fd;
 			}
 			// 这里会添加(没有就创建)
-			BLUE_LOG_INFO(g_logger) << "socket successful";
+			// BLUE_LOG_INFO(g_logger) << "socket successful";
 			blue::FdManagerPtr::GetInstance()->get(fd, true);
 			return fd;
 		}
@@ -506,7 +506,7 @@ namespace blue
 			{
 				return close_f(fd);
 			}
-			BLUE_LOG_INFO(g_logger) << "close hook successfuly";
+			// BLUE_LOG_INFO(g_logger) << "close hook successfuly";
 			blue::FdCxt::FdCxtPtr ctx = blue::FdManagerPtr::GetInstance()->get(fd);
 			if (ctx)
 			{
@@ -650,7 +650,7 @@ namespace blue
 			{
 				return setsockopt_f(sockfd, level, optname, optval, optlen);
 			}
-			BLUE_LOG_INFO(g_logger) << "setsockopt hook successfuly";
+			// BLUE_LOG_INFO(g_logger) << "setsockopt hook successfuly";
 			if (level == SOL_SOCKET)
 			{
 				if (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO)

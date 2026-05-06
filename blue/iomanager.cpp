@@ -117,8 +117,11 @@ namespace blue
         {
             lock1.unlock();
             MRWmutexType::WritelockSco lock(m_mutex);
-            contextSet(fd);
-            fd_ctx = m_fdContexts[fd];
+            if (it == m_fdContexts.end())
+            {
+                contextSet(fd);
+                fd_ctx = m_fdContexts[fd];
+            }
         }
         else
         {
