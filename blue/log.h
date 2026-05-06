@@ -596,7 +596,7 @@ namespace blue
          * @param level 日志级别,枚举类型
          * @return string
          */
-        static std::string Getlevelstring(Level level)
+        static std::string Getlevelstring(const Level& level)
         {
             switch (level)
             {

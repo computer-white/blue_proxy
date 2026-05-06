@@ -26,9 +26,9 @@ namespace blue
             // 事件
             struct EventContext
             {
-                Schedular *schedular;     // 事件的schedular
-                Fiber::FiberPtr fiber;    // 事件的协程
-                std::function<void()> cb; // 事件回调函数
+                Schedular *schedular = nullptr;     // 事件的schedular
+                Fiber::FiberPtr fiber = nullptr;    // 事件的协程
+                std::function<void()> cb = nullptr; // 事件回调函数
             };
 
             /**

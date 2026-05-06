@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
+#include <stdint.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 // 同步原语异步化
@@ -15,6 +16,7 @@ namespace blue
 {
 	bool is_hook_enable();
 	void set_hook_enable(bool flag);
+	int connect_with_timeout(int sockfd, const struct sockaddr *addr, socklen_t len, uint64_t timeout);
 }
 extern "C"
 {
