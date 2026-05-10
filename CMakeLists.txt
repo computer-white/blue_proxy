@@ -57,16 +57,21 @@ set(LIB_SRC
     blue/fdmanager.cpp
     blue/fiber.cpp
     blue/hook.cpp
-    blue/httprequest.cpp
     blue/iomanager.cpp
     blue/log.cpp
     blue/msocket.cpp
+    blue/msocketstream.cpp
+    blue/mstream.cpp
     blue/mthread.cpp
     blue/schedular.cpp
+    blue/tcpServer.cpp
     blue/timer.cpp
     blue/util.cpp
     http/http.cpp
     http/httpParser.cpp
+    http/httpserver.cpp
+    http/httpservlet.cpp
+    http/httpsession.cpp
     ${LLHTTP_SRC}
     # 如果有更多源文件，在这里添加
     # blue/logger.cpp
@@ -88,13 +93,14 @@ check_blue_file(config)
 check_blue_file(fdmanager)
 check_blue_file(fiber)
 check_blue_file(hook)
-check_blue_file(httprequest)
 check_blue_file(iomanager)
 check_blue_file(msocket)
 check_blue_file(mthread)
 check_blue_file(schedular)
 check_blue_file(timer)
-
+check_blue_file(tcpServer)
+check_blue_file(mstream)
+check_blue_file(msocketstream)
 
 # 检查http源文件是否存在
 macro(check_http_file file_name)
@@ -105,6 +111,9 @@ endmacro()
 
 check_http_file(http)
 check_http_file(httpParser)
+check_http_file(httpserver)
+check_http_file(httpservlet)
+check_http_file(httpsession)
 
 # 创建共享库
 add_library(blue SHARED ${LIB_SRC})
@@ -139,7 +148,6 @@ add_blue_test(test_fiber)
 add_blue_test(test_schedular)
 add_blue_test(test_iomanager)
 add_blue_test(test_hook)
-add_blue_test(test_server)
 add_blue_test(test_address)
 add_blue_test(test_interface)
 add_blue_test(test_ipv4)
@@ -147,6 +155,22 @@ add_blue_test(test_socket)
 add_blue_test(test_bytearray)
 add_blue_test(test_http)
 add_blue_test(test_httpParser)
+add_blue_test(test_tcpServer)
+add_blue_test(test_httpserver)
+
+# 为了简洁，定义一个宏来简化重复代码
+macro(add_blue_example test_name)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/examples/${test_name}.cpp)
+        add_executable(${test_name} examples/${test_name}.cpp)
+        target_link_libraries(${test_name} PRIVATE blue ${YAML_CPP} ${PTHREAD})
+        message(STATUS "测试程序 ${test_name} 已添加")
+    else()
+        # ** 修正点 3：警告信息使用了正确的文件名 **
+        message(WARNING "tests/${test_name}.cpp 不存在，跳过测试程序")
+    endif()
+endmacro()
+
+add_blue_example(echoServer)
 
 # 打印构建信息
 message(STATUS "========================")

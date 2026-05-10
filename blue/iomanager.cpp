@@ -82,8 +82,8 @@ namespace blue
         rt = epoll_ctl(m_epfd, EPOLL_CTL_ADD, m_ticklefds[0], &event);
         BLUE_ASSERT(rt == 0);
 
-        // contextResize(64);
-        contextSet(0);
+        contextResize(64);
+        // contextSet(0);
         Schedular::start();
     }
 
@@ -94,53 +94,53 @@ namespace blue
         close(m_ticklefds[0]);
         close(m_ticklefds[1]);
 
-        // for (size_t i = 0; i < m_fdContexts.size(); i++)
-        // {
-        //     if (m_fdContexts[i] != nullptr)
-        //     {
-        //         delete m_fdContexts[i];
-        //     }
-        // }
-
-        for (auto it : m_fdContexts)
+        for (size_t i = 0; i < m_fdContexts.size(); i++)
         {
-            delete it.second;
+            if (m_fdContexts[i] != nullptr)
+            {
+                delete m_fdContexts[i];
+            }
         }
+
+        // for (auto it : m_fdContexts)
+        // {
+        //     delete it.second;
+        // }
     }
 
     int IOManager::addEvent(int fd, Event event, std::function<void()> cb)
     {
         MRWmutexType::ReadlockSco lock1(m_mutex);
         FdContext *fd_ctx = nullptr;
-        auto it = m_fdContexts.find(fd);
-        if (it == m_fdContexts.end())
-        {
-            lock1.unlock();
-            MRWmutexType::WritelockSco lock(m_mutex);
-            if (it == m_fdContexts.end())
-            {
-                contextSet(fd);
-                fd_ctx = m_fdContexts[fd];
-            }
-        }
-        else
-        {
-            fd_ctx = it->second;
-            lock1.unlock();
-        }
-
-        // if (m_fdContexts.size() > fd)
+        // auto it = m_fdContexts.find(fd);
+        // if (it == m_fdContexts.end())
         // {
-        //     fd_ctx = m_fdContexts[fd];
         //     lock1.unlock();
+        //     MRWmutexType::WritelockSco lock(m_mutex);
+        //     if (it == m_fdContexts.end())
+        //     {
+        //         contextSet(fd);
+        //         fd_ctx = m_fdContexts[fd];
+        //     }
         // }
         // else
         // {
+        //     fd_ctx = it->second;
         //     lock1.unlock();
-        //     MRWmutexType::WritelockSco lock2(m_mutex);
-        //     contextResize(fd * 2);
-        //     fd_ctx = m_fdContexts[fd];
         // }
+
+        if (m_fdContexts.size() > fd)
+        {
+            fd_ctx = m_fdContexts[fd];
+            lock1.unlock();
+        }
+        else
+        {
+            lock1.unlock();
+            MRWmutexType::WritelockSco lock2(m_mutex);
+            contextResize(fd * 2);
+            fd_ctx = m_fdContexts[fd];
+        }
 
         FdContext::MmutexType::lockSco lock2(fd_ctx->mutex);
         // 重复提交相同任务
@@ -191,17 +191,17 @@ namespace blue
     bool IOManager::delEvent(int fd, Event event)
     {
         MRWmutexType::ReadlockSco lock(m_mutex);
-        auto it = m_fdContexts.find(fd);
-        if (it == m_fdContexts.end())
-        {
-            return false;
-        }
-        // if (m_fdContexts.size() <= fd)
+        // auto it = m_fdContexts.find(fd);
+        // if (it == m_fdContexts.end())
         // {
         //     return false;
         // }
-        // FdContext* fd_ctx = m_fdContexts[fd];
-        FdContext *fd_ctx = it->second;
+        if (m_fdContexts.size() <= fd)
+        {
+            return false;
+        }
+        FdContext *fd_ctx = m_fdContexts[fd];
+        // FdContext *fd_ctx = it->second;
         lock.unlock();
 
         FdContext::MmutexType::lockSco lock2(fd_ctx->mutex);
@@ -235,17 +235,17 @@ namespace blue
     bool IOManager::cancelEvent(int fd, Event event)
     {
         MRWmutexType::ReadlockSco lock(m_mutex);
-        auto it = m_fdContexts.find(fd);
-        if (it == m_fdContexts.end())
-        {
-            return false;
-        }
-        // if (m_fdContexts.size() <= fd)
+        // auto it = m_fdContexts.find(fd);
+        // if (it == m_fdContexts.end())
         // {
         //     return false;
         // }
-        // FdContext* fd_ctx = m_fdContexts[fd];
-        FdContext *fd_ctx = it->second;
+        if (m_fdContexts.size() <= fd)
+        {
+            return false;
+        }
+        FdContext *fd_ctx = m_fdContexts[fd];
+        // FdContext *fd_ctx = it->second;
         lock.unlock();
 
         FdContext::MmutexType::lockSco lock2(fd_ctx->mutex);
@@ -285,17 +285,17 @@ namespace blue
     bool IOManager::cancelAll(int fd)
     {
         MRWmutexType::ReadlockSco lock(m_mutex);
-        auto it = m_fdContexts.find(fd);
-        if (it == m_fdContexts.end())
-        {
-            return false;
-        }
-        // if (m_fdContexts.size() <= fd)
+        // auto it = m_fdContexts.find(fd);
+        // if (it == m_fdContexts.end())
         // {
         //     return false;
         // }
-        // FdContext* fd_ctx = m_fdContexts[fd];
-        FdContext *fd_ctx = it->second;
+        if (m_fdContexts.size() <= fd)
+        {
+            return false;
+        }
+        FdContext *fd_ctx = m_fdContexts[fd];
+        // FdContext *fd_ctx = it->second;
         lock.unlock();
 
         FdContext::MmutexType::lockSco lock2(fd_ctx->mutex);
@@ -348,17 +348,15 @@ namespace blue
 
     bool IOManager::stopping()
     {
-        // BLUE_LOG_INFO(g_logger) << " m_pendingEventCOunts : " << m_pendingEventCounts
-        //                         << " hasTimer : " << TimerManager::hasTimer()
-        //                         << " stopping : " << Schedular::stopping();
+
         return m_pendingEventCounts == 0 && !TimerManager::hasTimer() && Schedular::stopping();
     }
 
     void IOManager::idle()
     {
-        epoll_event *epevent = new epoll_event[64]();
-        std::shared_ptr<epoll_event> shared_event(epevent, [](epoll_event *ptr)
-                                                  { delete[] ptr; });
+        // auto epevent = std::make_unique<epoll_event[]>(64);
+        std::array<epoll_event, 64> epevent;
+
         while (true)
         {
             // uint64_t next_timeout = 0;
@@ -382,7 +380,7 @@ namespace blue
                     next_timeout = MAX_WAIT;
                 }
                 // BLUE_LOG_DEBUGE(g_logger) << "next_timeout : " << next_timeout;
-                rt = epoll_wait(m_epfd, epevent, 64, (int)next_timeout);
+                rt = epoll_wait(m_epfd, &epevent[0], 64, (int)next_timeout);
                 // 非阻塞IO,返回-1并设置errno = EINTR表示我们要的任务还没有被准备好
                 if (rt < 0 && errno == EINTR)
                 {
@@ -416,7 +414,7 @@ namespace blue
                     char dummy[18];
                     while (read(m_ticklefds[0], &dummy, 17) == 17)
                     {
-                        BLUE_LOG_INFO(g_logger) << dummy;
+                        // BLUE_LOG_INFO(g_logger) << dummy;
                     };
                     continue;
                 }
@@ -475,18 +473,18 @@ namespace blue
         }
     }
 
-    // void IOManager::contextResize(size_t size)
-    // {
-    //     m_fdContexts.resize(size);
-    //     for (size_t i = 0; i < size; i++)
-    //     {
-    //         if (m_fdContexts[i] == nullptr)
-    //         {
-    //             m_fdContexts[i] = new FdContext;
-    //             m_fdContexts[i]->fd = i;
-    //         }
-    //     }
-    // }
+    void IOManager::contextResize(size_t size)
+    {
+        m_fdContexts.resize(size);
+        for (size_t i = 0; i < size; i++)
+        {
+            if (m_fdContexts[i] == nullptr)
+            {
+                m_fdContexts[i] = new FdContext;
+                m_fdContexts[i]->fd = i;
+            }
+        }
+    }
 
     void IOManager::contextSet(int fd)
     {

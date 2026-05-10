@@ -32,7 +32,6 @@ namespace blue
         {
             return true;
         }
-        // BLUE_LOG_INFO(g_logger) << "进入FdCxt的init";
         struct stat buf;
         // 检查文件状态(是否是socket描述符)
         if (fstat(m_fd, &buf) == -1)
@@ -44,7 +43,6 @@ namespace blue
         {
             m_isInit = true;
             m_isSocket = S_ISSOCK(buf.st_mode);
-            // BLUE_LOG_INFO(g_logger) << "m_isSocket : " << m_isSocket;
         }
 
         if (m_isSocket)
@@ -114,7 +112,7 @@ namespace blue
 
         // FdCxt::FdCxtPtr newFdcxt = std::make_shared<FdCxt>(fd);
         FdCxt::FdCxtPtr newFdcxt(new FdCxt(fd));
-        BLUE_LOG_INFO(g_logger) << "创建了新的fdcxt";
+    
         m_datas[fd] = newFdcxt;
         return m_datas[fd];
     }

@@ -222,18 +222,18 @@ namespace blue
         HttpStatus CharsToHttpStatus(const char *ht);
 
         /**
-         * @brief httpMethod转为const char*
+         * @brief httpMethod 转为 std::string
          * @param ht 需要转化的httpMethod
          * @return httpMethod字符串
          */
-        const char *HttpMethodToChars(const HttpMethod &ht);
+        std::string HttpMethodToChars(const HttpMethod &ht);
 
         /**
-         * @brief httpStatus 转为 const char*
+         * @brief httpStatus 转为 std::string
          * @param ht 需要转化的httpStatus
          * @return httpStatus字符串
          */
-        const char *HttpStatusToChars(const HttpStatus &ht);
+        std::string HttpStatusToChars(const HttpStatus &ht);
 
         /* map自定义比较器 */
         struct CompareInsensitiveLess
@@ -299,7 +299,7 @@ namespace blue
         public:
             using HttpRequestPtr = std::shared_ptr<HttpRequest>;
             using MapType = std::map<std::string, std::string, CompareInsensitiveLess>;
-
+        public:
             /**
              * @brief httprequest构造函数
              * @param version 0x11表示http/1.1,0x10表示http/1.0
@@ -610,8 +610,17 @@ namespace blue
              * @brief 将httpRequest中的内容输出到os
              * @param os std::ostream
              */
-            std::ostream &dump(std::ostream &os);
+            std::ostream &dump(std::ostream &os) const;
 
+            /**
+             * @brief 内容输出为string
+             */
+            std::string toString() const;
+            
+            /**
+             * @brief version 转为 字符串
+             */
+            std::string versionToStr() const;
         private:
             HttpMethod m_method;
             uint8_t m_version;
@@ -620,9 +629,9 @@ namespace blue
             std::string m_query;
             std::string m_fragment;
             std::string m_body;
-            std::map<std::string, std::string, CompareInsensitiveLess> m_header;
-            std::map<std::string, std::string, CompareInsensitiveLess> m_param;
-            std::map<std::string, std::string, CompareInsensitiveLess> m_cookie;
+            MapType m_header;
+            MapType m_param;
+            MapType m_cookie;
         };
 
         class HttpResponse
@@ -771,8 +780,17 @@ namespace blue
              * @brief 将httpResponset中的内容输出到os
              * @param os std::ostream
              */
-            std::ostream &dump(std::ostream &os);
+            std::ostream &dump(std::ostream &os) const;
 
+            /**
+             * @brief 内容输出为string
+             */
+            std::string toString() const;
+
+            /**
+             * @brief version 转为 字符串
+             */
+            std::string versionToStr() const;
         private:
             HttpStatus m_status;
             uint8_t m_version;

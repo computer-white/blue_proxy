@@ -97,7 +97,7 @@ namespace blue
 	{
 		if (!blue::is_hook_enable())
 		{
-			// BLUE_LOG_INFO(g_logger) << hook_func_name << " hook failed";
+			BLUE_LOG_INFO(g_logger) << hook_func_name << " hook failed";
 			return func(fd, std::forward<Args>(args)...);
 		}
 		blue::FdCxt::FdCxtPtr ctx = blue::FdManagerPtr::GetInstance()->get(fd);

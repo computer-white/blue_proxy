@@ -158,8 +158,8 @@ namespace blue
         m_ctx.uc_stack.ss_sp = nullptr;
         m_ctx.uc_stack.ss_size = 0;
         ++s_fiber_count;
-        BLUE_LOG_INFO(g_logger) << "Fiber::Fiber(主协程构造) curr_id : "
-                                << Fiber::GetFiberID();
+        // BLUE_LOG_INFO(g_logger) << "Fiber::Fiber(主协程构造) curr_id : "
+        //                         << Fiber::GetFiberID();
     }
 
     Fiber::Fiber(std::function<void()> cb, bool use_caller, size_t stacksize) : m_id(++s_fiber_id),
@@ -195,8 +195,8 @@ namespace blue
             // 使用swapIn,swapOut协程上下文切换函数组
             makecontext(&m_ctx, &Fiber::MainFunc, 0);
         }
-        BLUE_LOG_INFO(g_logger) << "Fiber::Fiber(子协程构造) curr_id : "
-                                << Fiber::GetFiberID();
+        // BLUE_LOG_INFO(g_logger) << "Fiber::Fiber(子协程构造) curr_id : "
+        //                         << Fiber::GetFiberID();
     }
 
     Fiber::~Fiber()
@@ -208,8 +208,7 @@ namespace blue
 
         if (m_stack)
         {
-            auto status = m_status.load(std::memory_order_acquire);
-            // BLUE_LOG_INFO(g_logger) << "status : " << (int)status;
+            auto status = m_status.load(std::memory_order_acquire);;
             BLUE_ASSERT(status == Status::TERM ||
                         status == Status::EXCEPT ||
                         status == Status::INIT);
@@ -231,8 +230,8 @@ namespace blue
             curr_id = t_currfiber->getId();
         }
 
-        BLUE_LOG_INFO(g_logger) << "Fiber::~Fiber, this_id : " << this_id
-                                << ", curr_id : " << curr_id;
+        // BLUE_LOG_INFO(g_logger) << "Fiber::~Fiber, this_id : " << this_id
+        //                         << ", curr_id : " << curr_id;
     }
 
     void Fiber::reset(std::function<void()> cb)

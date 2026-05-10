@@ -102,7 +102,7 @@ namespace blue
 
     void Schedular::stop()
     {
-        BLUE_LOG_INFO(g_logger) << "stop";
+        BLUE_LOG_INFO(g_logger) << "shcedular stop";
 
         m_autoStopping.store(true, std::memory_order_release);
         m_stopping.store(true, std::memory_order_release);
@@ -148,7 +148,7 @@ namespace blue
             // }
             if (!stopping())
             {
-                BLUE_LOG_INFO(g_logger) << "stop: switching to main fiber";
+                BLUE_LOG_INFO(g_logger) << "schedular stop: switching to main fiber";
                 m_mainfiber->call();
             }
         }
@@ -164,7 +164,7 @@ namespace blue
             it->join();
         }
 
-        BLUE_LOG_INFO(g_logger) << "stop completed";
+        BLUE_LOG_INFO(g_logger) << "shcedular stop completed";
     }
 
     void Schedular::setThis()
@@ -174,7 +174,7 @@ namespace blue
 
     void Schedular::run()
     {
-        BLUE_LOG_INFO(g_logger) << "run";
+        BLUE_LOG_INFO(g_logger) << "schedular run";
 
         // 设置hook,同步原语异步化
         blue::set_hook_enable(true);

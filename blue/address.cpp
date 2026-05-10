@@ -347,7 +347,7 @@ namespace blue
 		return getAddr()->sa_family;
 	}
 
-	std::string Address::toString(bool show_port)
+	std::string Address::toString(bool show_port) const
 	{
 		std::stringstream ss;
 		insert(ss, show_port);

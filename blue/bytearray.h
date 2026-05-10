@@ -339,6 +339,11 @@ namespace blue
         void setPosition(size_t v);
 
         /**
+         * @brief 设置当前内容大小
+         */
+        void setSize(size_t v);
+
+        /**
          * @brief 把便利签内容写到文件
          * @param name 文件名称
          * @return 成功返回true
@@ -394,7 +399,7 @@ namespace blue
         std::string toHexString() const;
 
         /**
-         * @brief 只获取内容，不修改m_positoin
+         * @brief 只获取内容
          * @param vect 存放struct iovec的容器
          * @param size 指定获取内容的大小
          * @return 实际读到的内容
@@ -402,19 +407,21 @@ namespace blue
         uint64_t getReadBuffers(std::vector<struct iovec> &vect, uint64_t size = ~0ull) const;
 
         /**
-         * @brief 只获取内容(从指定位置开始)，不修改m_positoin
+         * @brief 只获取内容(从指定位置开始)
          * @param vect 存放struct iovec的容器
          * @param size 指定获取内容的大小
          * @param position 指定开始获取的位置
          * @return 实际读到的内容
+         * @note 并没有真正读出数据,是指将数据指针绑定到vect上,后序对vect的读取比如socket的send实现将byteArray上数据读出来
          */
         uint64_t getReadBuffers(std::vector<struct iovec> &vect, uint64_t size, size_t position) const;
 
         /**
-         * @brief 添加内容，会修改m_position
+         * @brief 添加内容，会修改m_capacity
          * @param vect 需要添加的内容
          * @param size 添加内容的大小
          * @return 返回实际写入的大小
+         * @note 并不是真正写入,只是将从m_curr当前页开始往后size大小的每一页绑定到vect上,后序通过对vect的写入(比如sock的recv)实现对byteArray的写入
          */
         uint64_t getWriteBuffers(std::vector<struct iovec> &vect, uint64_t size);
 

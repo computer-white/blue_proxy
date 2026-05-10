@@ -162,6 +162,7 @@ namespace blue
         std::shared_ptr<MSocket> newsockfd = 
         std::make_shared<MSocket>(m_family,m_type,m_protocol);
 
+        // ::accept被hook住后提交一个accept事件给epoll
         int connfd = ::accept(m_sockfd,nullptr,nullptr);
         if (connfd == -1)
         {
@@ -255,7 +256,7 @@ namespace blue
         }
         else
         {
-            BLUE_LOG_INFO(g_logger) << "timeout != -1";
+            
             if (blue::connect_with_timeout(m_sockfd,address->getAddr(),address->getAddrLen(),timeout))
             {
                 BLUE_LOG_ERROR(g_logger) << "::connect error,addr : "
@@ -507,6 +508,13 @@ namespace blue
         return os;
     }
 
+    std::string MSocket::toString() const
+    {
+        std::stringstream ss;
+        dump(ss);
+        return ss.str();
+    }
+
     bool MSocket::cancelAccept()
     {
         return blue::IOManager::GetThis()->cancelEvent(m_sockfd,blue::IOManager::Event::READ);
@@ -530,7 +538,7 @@ namespace blue
     void MSocket::_initSocket()
     {
         int val = 1; // 1表示启用
-        setOption(SOL_SOCKET,SO_REUSEADDR,val);
+        setOption(SOL_SOCKET,SO_REUSEADDR | SO_REUSEPORT,val);
         if (m_type == SOCK_STREAM)
         {
             setOption(IPPROTO_TCP,TCP_NODELAY,val);

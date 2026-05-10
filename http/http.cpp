@@ -6,6 +6,39 @@ namespace blue
 {
     namespace http
     {
+        static std::string SpaceToUnderLine(const char *tem)
+        {
+            std::string res(tem);
+            if (res.empty())
+            {
+                return res;
+            }
+            for (auto &ch : res)
+            {
+                if (ch == ' ')
+                {
+                    ch = '_';
+                }
+            }
+            return res;
+        }
+
+        static std::string UnderLineToSapce(const char *tem)
+        {
+            std::string res(tem);
+            if (res.empty())
+            {
+                return res;
+            }
+            for (auto &ch : res)
+            {
+                if (ch == '_')
+                {
+                    ch = ' ';
+                }
+            }
+            return res;
+        }
         static const char *s_methods[] = {
 #define XX(num, name, string) #string,
             BLUE_HTTP_METHOD_MAP(XX)
@@ -26,10 +59,11 @@ namespace blue
 
         HttpStatus StringToHttpStatus(const std::string &ht)
         {
-#define XX(num, name, msg)             \
-    if (strcasecmp(#msg, ht.c_str()) == 0) \
-    {                                  \
-        return HttpStatus::name;       \
+            std::string tem = SpaceToUnderLine(ht.c_str());
+#define XX(num, name, msg)                  \
+    if (strcasecmp(#msg, tem.c_str()) == 0) \
+    {                                       \
+        return HttpStatus::name;            \
     }
 
             BLUE_HTTP_STATUS_MAP(XX)
@@ -39,10 +73,11 @@ namespace blue
 
         HttpStatus CharsToHttpStatus(const char *ht)
         {
-#define XX(num, name, msg)       \
-    if (strcasecmp(#msg, ht))        \
-    {                            \
-        return HttpStatus::name; \
+            std::string tem = SpaceToUnderLine(ht);
+#define XX(num, name, msg)             \
+    if (strcasecmp(#msg, tem.c_str())) \
+    {                                  \
+        return HttpStatus::name;       \
     }
 
             BLUE_HTTP_STATUS_MAP(XX)
@@ -52,10 +87,11 @@ namespace blue
 
         HttpMethod StringToHttpMethod(const std::string &ht)
         {
-#define XX(num, name, string)             \
-    if (strcmp(#string, ht.c_str()) == 0) \
-    {                                     \
-        return HttpMethod::name;          \
+            std::string tem = SpaceToUnderLine(ht.c_str());
+#define XX(num, name, string)              \
+    if (strcmp(#string, tem.c_str()) == 0) \
+    {                                      \
+        return HttpMethod::name;           \
     }
 
             BLUE_HTTP_METHOD_MAP(XX)
@@ -72,30 +108,31 @@ namespace blue
 
         HttpMethod CharsToHttpMethod(const char *ht)
         {
-#define XX(num, name, string)     \
-    if (strcmp(#string, ht) == 0) \
-    {                             \
-        return HttpMethod::name;  \
+            std::string tem = SpaceToUnderLine(ht);
+#define XX(num, name, string)              \
+    if (strcmp(#string, tem.c_str()) == 0) \
+    {                                      \
+        return HttpMethod::name;           \
     }
             BLUE_HTTP_METHOD_MAP(XX);
 #undef XX
             return HttpMethod::INVAILD_METHOD;
         }
 
-        const char *HttpMethodToChars(const HttpMethod &ht)
+        std::string HttpMethodToChars(const HttpMethod &ht)
         {
             const uint16_t idx = static_cast<const uint16_t>(ht);
             if (idx >= sizeof(s_methods) / sizeof(s_methods[0]))
             {
                 return "<unknow>";
             }
-            return s_methods[idx];
+            return UnderLineToSapce(s_methods[idx]);
 
             // switch (ht)
             // {
             // #define XX(num,name,string) \
             //     case HttpMethod::name:  \
-            //         return #string;
+            //         return UnderLineToSapce(#string);
             //     BLUE_HTTP_METHOD_MAP(XX);
             // #undef XX
             //     default :
@@ -103,7 +140,7 @@ namespace blue
             // }
         }
 
-        const char *HttpStatusToChars(const HttpStatus &ht)
+        std::string HttpStatusToChars(const HttpStatus &ht)
         {
             // const uint16_t idx = static_cast<const uint16_t>(ht);
             // auto it = s_status_map.find(idx);
@@ -117,8 +154,8 @@ namespace blue
             {
 #define XX(num, name, msg) \
     case HttpStatus::name: \
-        return #msg;
-                HTTP_STATUS_MAP(XX);
+        return UnderLineToSapce(#msg);
+                BLUE_HTTP_STATUS_MAP(XX);
 #undef XX
             default:
                 return "<unknow>";
@@ -236,7 +273,7 @@ namespace blue
             m_cookie.clear();
         }
 
-        std::ostream &HttpRequest::dump(std::ostream &os)
+        std::ostream &HttpRequest::dump(std::ostream &os) const
         {
             os << HttpMethodToChars(m_method) << " "
                << m_path
@@ -262,16 +299,35 @@ namespace blue
                 os << i.first << ": " << i.second << "\r\n";
             }
             os << "Connection: " << (m_keepAlive ? "keep-alive" : "close") << "\r\n";
+            os << "\r\n";
             if (!m_body.empty())
             {
-                os << "Content-Length: " << std::to_string(m_body.size()) << "\r\n\r\n"
-                   << m_body;
+                os << m_body;
             }
-            else
-            {
-                os << "\r\n";
-            }
+            // if (!m_body.empty())
+            // {
+            //     os << "Content-Length: " << std::to_string(m_body.size()) << "\r\n\r\n"
+            //        << m_body;
+            // }
+            // else
+            // {
+            //     os << "\r\n";
+            // }
             return os;
+        }
+
+        std::string HttpRequest::toString() const
+        {
+            std::stringstream ss;
+            dump(ss);
+            return ss.str();
+        }
+
+        std::string HttpRequest::versionToStr() const
+        {
+            int major = m_version >> 4;    // 高 4 位
+            int minor = m_version & 0x0F;  // 低 4 位
+            return std::to_string(major) + "." + std::to_string(minor);
         }
 
         HttpResponse::HttpResponse(uint8_t version, bool keepAlive)
@@ -297,7 +353,7 @@ namespace blue
             m_header.erase(key);
         }
 
-        std::ostream &HttpResponse::dump(std::ostream &os)
+        std::ostream &HttpResponse::dump(std::ostream &os) const
         {
             os << "HTTP/"
                << (uint32_t)(m_version >> 4)
@@ -322,17 +378,35 @@ namespace blue
                 os << i.first << ": " << i.second << "\r\n";
             }
             os << "Connection: " << (m_keepAlive ? "keep-alive" : "close") << "\r\n";
-
+            os << "\r\n";
             if (!m_body.empty())
             {
-                os << "Content-Length: " << std::to_string(m_body.size()) << "\r\n\r\n"
-                   << m_body;
+                os << m_body;
             }
-            else
-            {
-                os << "\r\n";
-            }
+            // if (!m_body.empty())
+            // {
+            //     os << "Content-Length: " << std::to_string(m_body.size()) << "\r\n\r\n"
+            //        << m_body;
+            // }
+            // else
+            // {
+            //     os << "\r\n";
+            // }
             return os;
+        }
+
+        std::string HttpResponse::toString() const
+        {
+            std::stringstream ss;
+            dump(ss);
+            return ss.str();
+        }
+
+        std::string HttpResponse::versionToStr() const
+        {
+            int major = m_version >> 4;    // 高 4 位
+            int minor = m_version & 0x0F;  // 低 4 位
+            return std::to_string(major) + "." + std::to_string(minor);
         }
 
         void HttpResponse::reset()

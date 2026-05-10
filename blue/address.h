@@ -23,7 +23,7 @@ namespace blue
 		/**
 		 * @brief  解析host主机名
 		 * @param host 需要被解析的主机名,其中若包含的端口号为空设置为默认端口(80)
-		 * @param family 地址家族,比如AF_INET.默认值为AF_UNSPEC
+		 * @param family 地址家族,比如AF_INET.默认值为AF_INET
 		 * @param type 类型,比如SOCK_STREAM... 默认0
 		 * @param protocol 协议 默认0
 		 * @return 返回任意一个Address的智能指针
@@ -34,7 +34,7 @@ namespace blue
 		/**
 		 * @brief  解析host主机名
 		 * @param host 需要被解析的主机名,其中若包含的端口号为空设置为默认端口(80)
-		 * @param family 地址家族,比如AF_INET.默认值为AF_UNSPEC
+		 * @param family 地址家族,比如AF_INET.默认值为AF_INET
 		 * @param type 类型,比如SOCK_STREAM... 默认0
 		 * @param protocol 协议 默认0
 		 * @return 返回任意一个IPAddress的智能指针
@@ -46,7 +46,7 @@ namespace blue
 		 * @brief  解析host主机名
 		 * @param results 存放解析出来的Address的智能指针的容器
 		 * @param host 需要被解析的主机名,其中若包含的端口号为空设置为默认端口(80)
-		 * @param family 地址家族,比如AF_INET.默认值为AF_UNSPEC
+		 * @param family 地址家族,比如AF_INET.默认值为AF_INET
 		 * @param type 类型,比如SOCK_STREAM... 默认0
 		 * @param protocol 协议 默认0
 		 * @return 成功返回true 失败返回false
@@ -57,7 +57,7 @@ namespace blue
 		/**
 		 * @brief  获取本机接口和ip地址
 		 * @param results 存放接口名和ip地址的映射,例如 enth0 172.2953.218/20
-		 * @param family 地址家族,比如AF_INET.默认值为AF_UNSPEC
+		 * @param family 地址家族,比如AF_INET.默认值为AF_INET
 		 * @return 成功返回true 失败返回false
 		 */
 		static bool GetInterfaceAddress(std::multimap<std::string,
@@ -68,7 +68,7 @@ namespace blue
 		 * @brief  获取本机接口和ip地址
 		 * @param results 存放ip地址的容器,例如 172.2953.218/20
 		 * @param interface 接口名 例如 enth0
-		 * @param family 地址家族,比如AF_INET.默认值为AF_UNSPEC
+		 * @param family 地址家族,比如AF_INET.默认值为AF_INET
 		 * @return 成功返回true 失败返回false
 		 */
 		static bool GetInterfaceAddress(std::vector<std::pair<std::shared_ptr<Address>, uint32_t>> &results,
@@ -94,7 +94,7 @@ namespace blue
 		 * @param show_port 是否显示端口号,true表示显示
 		 * @return 返回一个较为完整的网络地址字符串字符串
 		 */
-		std::string toString(bool show_port = true);
+		std::string toString(bool show_port = true) const;
 
 		/**
 		 * @brief  纯虚函数

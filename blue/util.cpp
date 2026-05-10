@@ -23,7 +23,7 @@ namespace blue
     void Backtrace(std::vector<std::string> &bt, int size, int skip)
     {
         void **array = (void **)malloc(sizeof(void *) * size);
-        size_t s = ::backtrace(array, size);
+        ssize_t s = ::backtrace(array, size);
 
         char **string = ::backtrace_symbols(array, s);
         if (string == NULL)

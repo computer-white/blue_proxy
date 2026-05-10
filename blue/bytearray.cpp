@@ -672,6 +672,14 @@ namespace blue
         }
     }
 
+    void ByteArray::setSize(size_t v)
+    {
+        if (m_size < v)
+        {
+            m_size = v;
+        }
+    }
+
     std::string ByteArray::toString() const
     {
         std::string str;

@@ -150,8 +150,8 @@ namespace blue
         int m_epfd = 0;                                 // epoll_create返回的句柄,监听的事件集合的句柄
         int m_ticklefds[2];                             // 文件描述符,m_ticklefds[0]表示读,[1]表示写
         std::atomic<size_t> m_pendingEventCounts = {0}; // 等待执行的任务计数
-        // std::vector<FdContext*> m_fdContexts;
-        std::unordered_map<int, FdContext *> m_fdContexts; // 改用map存储fd文件描述符对应的事件
+        std::vector<FdContext *> m_fdContexts;          // 使用vector存储fd描述符及其对应的事件
+        // std::unordered_map<int, FdContext *> m_fdContexts; // 改用map存储fd文件描述符对应的事件
     };
 } // namespace blue
 

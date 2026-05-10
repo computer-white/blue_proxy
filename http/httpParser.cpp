@@ -33,6 +33,25 @@ namespace blue
 {
     namespace http
     {
+
+        void HttpRequestParser::SetRequestBufferSize(size_t size)
+        {
+            if (size == 0)
+            {
+                size = g_http_request_buffer_size->getValue() * 2;
+            }
+            g_http_request_buffer_size->setValue(size);
+        }
+
+        uint64_t HttpRequestParser::GetHttpRequestBufferSize()
+        {
+            return s_http_request_buffer_size;
+        }
+        uint64_t HttpRequestParser::GetHttpRequestMaxBodySize()
+        {
+            return s_http_request_max_body_size;
+        }
+
         HttpRequestParser::HttpRequestParser()
         {
             m_data.reset(new blue::http::HttpRequest());

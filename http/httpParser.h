@@ -86,6 +86,16 @@ namespace blue
              * @brief 是否结束解析了
              */
             virtual bool isFinalized() const = 0;
+
+            /**
+             * @brief 禁止拷贝和移动
+             */
+            Parser() = default;
+            ~Parser() = default;
+            Parser(const Parser& lhs) = delete;
+            Parser& operator=(const Parser& lhs) = delete;
+            Parser(Parser&& rhs) = delete;
+            Parser& operator=(Parser&& rhs) = delete;
         };
 
         class HttpRequestParser : public Parser
@@ -239,6 +249,14 @@ namespace blue
              */
             bool isFinalized() const override;
 
+            /**
+             * @brief 获取解析后的内容
+             */
+            std::shared_ptr<HttpRequest> getData() const { return m_data; }
+        public:
+            static uint64_t GetHttpRequestBufferSize();
+            static uint64_t GetHttpRequestMaxBodySize();
+            static void SetRequestBufferSize(size_t size);
         private:
 
             /**
@@ -533,6 +551,10 @@ namespace blue
              */
             bool isFinalized() const override;
 
+            /**
+             * @brief 获取解析后的内容
+             */
+            std::shared_ptr<HttpResponse> getData() const { return m_data; }
         private:
 
             /**

@@ -166,7 +166,7 @@ namespace blue
         std::shared_ptr<MSocket> accept();
 
         /**
-         * @brief 初始化socket属性,TCP禁用nagle算法,socket本地地址重用
+         * @brief 初始化socket属性,TCP禁用nagle算法,socket本地地址端口重用
          * @param address socketfd需要绑定的地址,地址的family必须与调用此函数对象的family相同
          * @return 成功返回 true
          */
@@ -323,7 +323,17 @@ namespace blue
          */
         int getErrno();
 
+        /**
+         * @brief 将内容写入os流
+         * @return ostream
+         */
         std::ostream &dump(std::ostream &os) const;
+
+        /**
+         * @brief 转为string输出
+         * @return string内容
+         */
+        std::string toString() const;
 
         /*
             取消accept事件
