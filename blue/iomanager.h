@@ -1,8 +1,9 @@
-#ifndef __BLUE_IOMANAGER_H__
-#define __BLUE_IOMANAGER_H__
+#ifndef BLUE_IOMANAGER_H
+#define BLUE_IOMANAGER_H
 #include <unordered_map>
 #include "schedular.h"
 #include "timer.h"
+
 namespace blue
 {
     class IOManager : public Schedular, public TimerManager

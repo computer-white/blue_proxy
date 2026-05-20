@@ -1,9 +1,10 @@
-#ifndef __BLUE_FDMANAGER_H__
-#define __BLUE_FDMANAGER_h__
+#ifndef BLUE_FDMANAGER_H
+#define BLUE_FDMANAGER_h
 #include <memory>
 #include <unordered_map>
 #include "mthread.h"
 #include "singleton.h"
+
 namespace blue
 {
     class FdCxt : std::enable_shared_from_this<FdCxt>
@@ -80,6 +81,12 @@ namespace blue
          * @return
          */
         void setTimeout(int type, uint64_t val);
+
+        /**
+         * @brief 设置 isclosed
+         * @param val true 表示关闭
+         */
+        void setClosed(bool val) { m_isClosed = val; }
 
         /**
          * @brief 获取超时

@@ -397,7 +397,7 @@ namespace blue
             blue::TimerManager::listExpiredCb(cbs);
             if (!cbs.empty())
             {
-                BLUE_LOG_DEBUGE(g_logger) << "cbs.size : " << cbs.size();
+                // BLUE_LOG_DEBUGE(g_logger) << "cbs.size : " << cbs.size();
 
                 // 提交超时任务
                 blue::Schedular::schedule(cbs.begin(), cbs.end());
@@ -454,12 +454,23 @@ namespace blue
                 }
 
                 // 执行任务
-                if (real_event & Event::READ)
+                // if (real_event & Event::READ)
+                // {
+                //     fd_ctx->triggerContext(Event::READ);
+                //     --m_pendingEventCounts;
+                // }
+                // if (real_event & Event::WRITE)
+                // {
+                //     fd_ctx->triggerContext(Event::WRITE);
+                //     --m_pendingEventCounts;
+                // }
+                int trigger_events = real_event & fd_ctx->m_events;
+                if (trigger_events & Event::READ)
                 {
                     fd_ctx->triggerContext(Event::READ);
                     --m_pendingEventCounts;
                 }
-                if (real_event & Event::WRITE)
+                if (trigger_events & Event::WRITE)
                 {
                     fd_ctx->triggerContext(Event::WRITE);
                     --m_pendingEventCounts;

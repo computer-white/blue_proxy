@@ -1,5 +1,5 @@
-#ifndef __BLUE_CONFIG_H__
-#define __BLUE_CONFIG_H__
+#ifndef BLUE_CONFIG_H
+#define BLUE_CONFIG_H
 #include <memory>
 #include <sstream>
 #include <string>
@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include "log.h"
 #include "mthread.h"
+
 namespace blue
 {
     // 配置基类

@@ -1,5 +1,5 @@
-#ifndef __BLUE_BYTEARRAY_H__
-#define __BLUE_BYTEARRAY_H__
+#ifndef BLUE_BYTEARRAY_H
+#define BLUE_BYTEARRAY_H
 #include <memory>
 #include <string>
 #include <stdint.h>

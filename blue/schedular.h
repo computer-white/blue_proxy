@@ -1,5 +1,5 @@
-#ifndef __BLUE_SCHEDULAR_H__
-#define __BLUE_SCHEDULAR_H__
+#ifndef BLUE_SCHEDULAR_H
+#define BLUE_SCHEDULAR_H
 #include <memory>
 #include <list>
 #include "fiber.h"

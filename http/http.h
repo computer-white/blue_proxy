@@ -1,5 +1,5 @@
-#ifndef __BLUE_HTTP_H__
-#define __BLUE_HTTP_H__
+#ifndef BLUE_HTTP_H
+#define BLUE_HTTP_H
 #include <memory>
 #include <map>
 #include <string>
@@ -14,7 +14,7 @@ namespace blue
     namespace http
     {
         /* Status Codes */
-#define BLUE_HTTP_STATUS_MAP(XX)                                                                         \
+#define BLUE_HTTP_STATUS_MAP(XX)                                                                    \
     XX(100, CONTINUE, CONTINUE)                                                                     \
     XX(101, SWITCHING_PROTOCOLS, SWITCHING_PROTOCOLS)                                               \
     XX(102, PROCESSING, PROCESSING)                                                                 \
@@ -116,7 +116,7 @@ namespace blue
     XX(599, NETWORK_CONNECT_TIMEOUT, NETWORK_CONNECT_TIMEOUT)
 
         /* Request Methods */
-#define BLUE_HTTP_METHOD_MAP(XX)              \
+#define BLUE_HTTP_METHOD_MAP(XX)         \
     XX(0, DELETE, DELETE)                \
     XX(1, GET, GET)                      \
     XX(2, HEAD, HEAD)                    \
@@ -178,7 +178,7 @@ namespace blue
 #define XX(num, name, string) name = num,
             BLUE_HTTP_METHOD_MAP(XX)
 #undef XX
-            INVAILD_METHOD
+                INVAILD_METHOD
         };
 
         enum class HttpStatus
@@ -186,7 +186,7 @@ namespace blue
 #define XX(code, name, desc) name = code,
             BLUE_HTTP_STATUS_MAP(XX)
 #undef XX
-            INVAILD_STATUS
+                INVAILD_STATUS
         };
 
         /**
@@ -208,7 +208,7 @@ namespace blue
         /**
          * @brief const char* 转为httpMethod
          * @param ht method字符串
-         * @return HttpMethod 
+         * @return HttpMethod
          * @note 严格区分大小写
          */
         HttpMethod CharsToHttpMethod(const char *ht);
@@ -318,7 +318,7 @@ namespace blue
              * @return 请求方法
              */
             HttpMethod getMethod() const { return m_method; }
-            
+
             /**
              * @brief 获取url中query部分
              * @return url中query部分
@@ -521,6 +521,20 @@ namespace blue
             bool hasCookie(const std::string &key, std::string *val = nullptr);
 
             /**
+             * @brief 对gzip进行压缩
+             * @param data 需要压缩的数据
+             * @return 返回压缩后的数据
+             */
+            std::string compress(const std::string &data) const;
+
+            /**
+             * @brief 对gzip进行解压
+             * @param data 需要解压的数据
+             * @return 返回解压后的数据
+             */
+            std::string decompress(const std::string &data) const;
+
+            /**
              * @brief 重置所有变量
              */
             void reset();
@@ -616,15 +630,17 @@ namespace blue
              * @brief 内容输出为string
              */
             std::string toString() const;
-            
+
             /**
              * @brief version 转为 字符串
              */
             std::string versionToStr() const;
+
         private:
             HttpMethod m_method;
             uint8_t m_version;
             bool m_keepAlive;
+            std::string m_scheme;
             std::string m_path;
             std::string m_query;
             std::string m_fragment;
@@ -641,7 +657,6 @@ namespace blue
             using MapType = std::map<std::string, std::string, CompareInsensitiveLess>;
 
         public:
-            
             /**
              * @brief httpresponse构造函数
              * @param version 0x11表示http/1.1,0x10表示http/1.0
@@ -745,10 +760,24 @@ namespace blue
             void delHeader(const std::string &key);
 
             /**
+             * @brief 对gzip进行压缩
+             * @param data 需要压缩的数据
+             * @return 返回压缩后的数据
+             */
+            std::string compress(const std::string &data) const;
+
+            /**
+             * @brief 对gzip进行解压
+             * @param data 需要解压的数据
+             * @return 返回解压后的数据
+             */
+            std::string decompress(const std::string &data) const;
+
+            /**
              * @brief 重置所有变量
              */
             void reset();
-            
+
             /**
              * @brief 检查header中是否有key，并通过val拿出来，没有就拿到的是def
              * @param m header的map
@@ -791,6 +820,7 @@ namespace blue
              * @brief version 转为 字符串
              */
             std::string versionToStr() const;
+
         private:
             HttpStatus m_status;
             uint8_t m_version;

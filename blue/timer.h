@@ -1,5 +1,5 @@
-#ifndef __BLUE_TIMRE_H__
-#define __BLUE_TIMER_H__
+#ifndef BLUE_TIMRE_H
+#define BLUE_TIMER_H
 #include <memory>
 #include <set>
 #include "mthread.h"

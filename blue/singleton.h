@@ -1,6 +1,7 @@
-#ifndef __BLUE_SINGLETON_H__
-#define __BLUE_SINGLETON_H__
+#ifndef BLUE_SINGLETON_H
+#define BLUE_SINGLETON_H
 #include <memory>
+
 // 单例模式
 namespace blue
 {

@@ -1,7 +1,8 @@
-#ifndef __BLUE_MSTREAM_H__
-#define __BLUE_MSTREAM_H__
+#ifndef BLUE_MSTREAM_H
+#define BLUE_MSTREAM_H
 #include <memory>
 #include "bytearray.h"
+
 namespace blue
 {
     /* 流式处理的基类 */

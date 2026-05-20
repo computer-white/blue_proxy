@@ -4,6 +4,7 @@
 #include <string>
 #include <assert.h>
 #include "util.h"
+#include "log.h"
 
 #if defined (__GNUC__ ) && __GNUC__ >= 4  || defined (__llvm__)
 // 告诉编译器优化,条件大概成立

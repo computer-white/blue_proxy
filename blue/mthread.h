@@ -1,5 +1,5 @@
-#ifndef __BLUE_MTHREAD_H__
-#define __BLUE_MTHREAD_H__
+#ifndef BLUE_MTHREAD_H
+#define BLUE_MTHREAD_H
 #include <thread>
 #include <functional>
 #include <future>
@@ -7,6 +7,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include <atomic>
+
 namespace blue
 {
     // 信号量

@@ -42,7 +42,7 @@ namespace blue
         ssize_t ret = m_sock->recv(&vec[0],vec.size());
         if (ret > 0)
         {
-            data->setSize(ret);
+            data->setSize(data->getSize() + ret);
             data->setPosition(data->getPosition() + ret);
         }
         return ret;
@@ -68,7 +68,7 @@ namespace blue
         ssize_t ret = m_sock->send(&vec[0],vec.size());
         if (ret > 0)
         {
-            data->setSize(ret);
+            // data->setSize(ret);
             data->setPosition(data->getPosition() + ret);
         }
         return ret;

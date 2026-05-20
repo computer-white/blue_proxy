@@ -1,5 +1,5 @@
-#ifndef __BLUE_FIBER_H__
-#define __BLUE_FIBER_H__
+#ifndef BLUE_FIBER_H
+#define BLUE_FIBER_H
 #include <memory>
 #include <atomic>
 #include <ucontext.h> // 协程

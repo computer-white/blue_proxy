@@ -1,5 +1,5 @@
-#ifndef __BLUE_ADDRESS_H__
-#define __BLUE_ADDRESS_H__
+#ifndef BLUE_ADDRESS_H
+#define BLUE_ADDRESS_H
 #include <memory>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -250,6 +250,11 @@ namespace blue
 		 */
 		virtual void setPort(uint16_t v) override;
 
+		/**
+		 * @brief 获取ip地址
+		 */
+		std::string getIp() const;
+
 	private:
 		sockaddr_in m_addr;
 	};
@@ -347,6 +352,11 @@ namespace blue
 		 */
 		virtual void setPort(uint16_t v) override;
 
+		/**
+		 * @brief 获取ip地址
+		 */
+		std::string getIp() const;
+
 	private:
 		sockaddr_in6 m_addr;
 	};
@@ -442,6 +452,11 @@ namespace blue
 		 * @return 地址长度
 		 */
 		virtual socklen_t getAddrLen() const override;
+
+		/**
+		 * @brief 获取ip地址
+		 */
+		std::string getIp() const;
 
 		/**
 		 * @brief 将family写到os流

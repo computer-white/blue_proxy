@@ -1,5 +1,5 @@
-#ifndef __BLUE_UTIL_H__
-#define __BLUE_UTIL_H__
+#ifndef BLUE_UTIL_H
+#define BLUE_UTIL_H
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/types.h>

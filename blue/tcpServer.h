@@ -1,10 +1,11 @@
-#ifndef __BLUE_TCPSERVER_H__
-#define __BLUE_TCPSERVER_H__
+#ifndef BLUE_TCPSERVER_H
+#define BLUE_TCPSERVER_H
 #include <memory>
 #include <functional>
 #include "address.h"
 #include "iomanager.h"
 #include "msocket.h"
+
 namespace blue
 {
     /* 对TCP 服务的封装 */

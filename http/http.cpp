@@ -1,3 +1,5 @@
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 #include "http/http.h"
 #include "blue/log.h"
 
@@ -6,6 +8,8 @@ namespace blue
 {
     namespace http
     {
+        namespace boostios = boost::iostreams;
+
         static std::string SpaceToUnderLine(const char *tem)
         {
             std::string res(tem);
@@ -171,6 +175,7 @@ namespace blue
             : m_method(HttpMethod::GET),
               m_version(version),
               m_keepAlive(keepAlive),
+              m_scheme("http"),
               m_path("/")
         {
         }
@@ -186,14 +191,14 @@ namespace blue
                                           const std::string &def) const
         {
             auto it = m_param.find(key);
-            return it == m_header.end() ? def : it->second;
+            return it == m_param.end() ? def : it->second;
         }
 
         std::string HttpRequest::getCookie(const std::string &key,
                                            const std::string &def) const
         {
             auto it = m_cookie.find(key);
-            return it == m_header.end() ? def : it->second;
+            return it == m_cookie.end() ? def : it->second;
         }
 
         void HttpRequest::setHeader(const std::string &key, const std::string &val)
@@ -259,12 +264,55 @@ namespace blue
             return true;
         }
 
+        std::string HttpRequest::compress(const std::string &data) const
+        {
+            try
+            {
+                std::ostringstream result;
+                boostios::filtering_ostream out;
+                out.push(boostios::gzip_compressor(boostios::gzip::default_compression));
+                out.push(result);
+                out.write(data.data(), data.size());
+                out.reset();
+                return result.str();
+            }
+            catch (const std::exception &e)
+            {
+                throw std::runtime_error("gzip compress failed: " + std::string(e.what()));
+                // BLUE_LOG_ERROR(g_logger) << "http requestParser gzip compress error : " << errno
+                //                          << " strerror : " << strerror(errno);
+                // return nullptr;
+            }
+        }
+
+        std::string HttpRequest::decompress(const std::string &data) const
+        {
+            try
+            {
+                std::istringstream input(data);
+                boostios::filtering_istream in;
+                in.push(boostios::gzip_decompressor());
+                in.push(input);
+                std::ostringstream result;
+                result << in.rdbuf();
+                return result.str();
+            }
+            catch (const std::exception &e)
+            {
+                throw std::runtime_error("gzip decompress failed: " + std::string(e.what()));
+                // BLUE_LOG_ERROR(g_logger) << "http requestParser gzip compress error : " << errno
+                //                          << " strerror : " << strerror(errno);
+                // return nullptr;
+            }
+        }
+
         void HttpRequest::reset()
         {
             m_method = HttpMethod::GET;
             m_version = 0x11;
             m_keepAlive = true;
             m_path.clear();
+            m_scheme.clear();
             m_query.clear();
             m_fragment.clear();
             m_body.clear();
@@ -325,8 +373,8 @@ namespace blue
 
         std::string HttpRequest::versionToStr() const
         {
-            int major = m_version >> 4;    // 高 4 位
-            int minor = m_version & 0x0F;  // 低 4 位
+            int major = m_version >> 4;   // 高 4 位
+            int minor = m_version & 0x0F; // 低 4 位
             return std::to_string(major) + "." + std::to_string(minor);
         }
 
@@ -404,9 +452,51 @@ namespace blue
 
         std::string HttpResponse::versionToStr() const
         {
-            int major = m_version >> 4;    // 高 4 位
-            int minor = m_version & 0x0F;  // 低 4 位
+            int major = m_version >> 4;   // 高 4 位
+            int minor = m_version & 0x0F; // 低 4 位
             return std::to_string(major) + "." + std::to_string(minor);
+        }
+
+        std::string HttpResponse::compress(const std::string &data) const
+        {
+            try
+            {
+                std::ostringstream result;
+                boostios::filtering_ostream out;
+                out.push(boostios::gzip_compressor(boostios::gzip::default_compression));
+                out.push(result);
+                out.write(data.data(), data.size());
+                out.reset();
+                return result.str();
+            }
+            catch (const std::exception &e)
+            {
+                throw std::runtime_error("gzip compress failed: " + std::string(e.what()));
+                // BLUE_LOG_ERROR(g_logger) << "http requestParser gzip compress error : " << errno
+                //                          << " strerror : " << strerror(errno);
+                // return nullptr;
+            }
+        }
+
+        std::string HttpResponse::decompress(const std::string &data) const
+        {
+            try
+            {
+                std::istringstream input(data);
+                boostios::filtering_istream in;
+                in.push(boostios::gzip_decompressor());
+                in.push(input);
+                std::ostringstream result;
+                result << in.rdbuf();
+                return result.str();
+            }
+            catch (const std::exception &e)
+            {
+                throw std::runtime_error("gzip decompress failed: " + std::string(e.what()));
+                // BLUE_LOG_ERROR(g_logger) << "http requestParser gzip compress error : " << errno
+                //                          << " strerror : " << strerror(errno);
+                // return nullptr;
+            }
         }
 
         void HttpResponse::reset()

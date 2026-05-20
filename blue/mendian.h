@@ -1,5 +1,5 @@
-#ifndef __BLUE_ENDIAN_H__
-#define __BLUE_ENDIAN_H__
+#ifndef BLUE_ENDIAN_H
+#define BLUE_ENDIAN_H
 
 #define BLUE_LITTLE_ENDIAN 1
 #define BLUE_BIG_ENDIAN 2
@@ -7,6 +7,7 @@
 #include <byteswap.h>
 #include <stdint.h>
 #include <type_traits>
+
 namespace blue
 {
 #if __cplusplus >= 202002L

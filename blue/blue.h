@@ -1,5 +1,5 @@
-#ifndef __BLUE_BLUE_H__
-#define __BLUE_BLUE_H__
+#ifndef BLUE_BLUE_H
+#define BLUE_BLUE_H
 #include "config.h"
 #include "fiber.h"
 #include "log.h"

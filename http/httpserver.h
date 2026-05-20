@@ -1,5 +1,6 @@
-#ifndef __BLUE_HTTP_HTTPSERVER_H__
-#define __BLUE_HTTP_HTTPSERVER_H__
+#ifndef BLUE_HTTP_HTTPSERVER_H
+#define BLUE_HTTP_HTTPSERVER_H
+#define USE_GUMBO
 #include "httpsession.h"
 #include "httpservlet.h"
 #include "blue/tcpServer.h"
@@ -45,9 +46,40 @@ namespace blue
                  */
                 virtual void handleClient(MSocket::MSocketPtr sock) override;
             private:
+                void _handleConnect(MSocket::MSocketPtr sock,
+                                            HttpRequest::HttpRequestPtr request);
+                /**
+                 * @brief 将客户端请求头部信息设置到headers中作为我们代理发给其他目标的header
+                 * @param headers 需要被设置请求头部信息
+                 */
+                void _setHeaders(HttpRequest::HttpRequestPtr request, std::map<std::string,std::string> &headers);
+
+                /**
+                 * @brief 设置ip和port
+                 * @param address ip地址
+                 * @param ip 需要被设置的ip
+                 * @param port 需要被设置的port
+                 */
+                void _setIpAndPort(blue::IPAddress::IPAddressPtr address, std::string &ip, std::string &port);
+
+                /**
+                 * @brief 转发远端请求到target
+                 * @param request 原始请求
+                 * @param targeturl 目标url
+                 */
+                void _forwardRequest(HttpRequest::HttpRequestPtr request, HttpResponse::HttpResponsePtr response, const std::string &targeturl, bool isForwardProxy = false);
+            private:
                 bool m_keepAlive;
+                std::string m_remoteIP = "";
+                std::string m_remotePort = "";
+                std::string m_localIp = "";
+                std::string m_localPort = "";
                 std::shared_ptr<ServletDispatch> m_dispatch;
         };
+        // 声明
+        static std::string rewrite_url(const std::string &url,
+                                       const std::string &target,
+                                       const std::string &proxy_path);
     }
 }
 

@@ -1,8 +1,8 @@
-#ifndef __BLUE_MSOCKET_H__
-#define __BLUE_MSOCKET_H__
-
+#ifndef BLUE_MSOCKET_H
+#define BLUE_MSOCKET_H
 #include <memory>
 #include "address.h"
+
 namespace blue
 {
     class MSocket : public std::enable_shared_from_this<MSocket>

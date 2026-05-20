@@ -24,6 +24,7 @@ namespace blue
 
     FdCxt::~FdCxt()
     {
+        // BLUE_LOG_INFO(g_logger) << "FdCxt destructor, fd=" << m_fd << ", this=" << this;
     }
 
     bool FdCxt::init()
@@ -126,6 +127,7 @@ namespace blue
             BLUE_LOG_INFO(g_logger) << "需要删除的文件fd不存在";
             return;
         }
-        it->second.reset();
+        it->second->setClosed(true);
+        m_datas.erase(it);
     }
 }

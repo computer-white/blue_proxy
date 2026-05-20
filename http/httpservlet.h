@@ -1,5 +1,5 @@
-#ifndef __BLUE_HTTP_HTTPSERVLET_H__
-#define __BLUE_HttP_HTTPSERVLET_H__
+#ifndef BLUE_HTTP_HTTPSERVLET_H
+#define BLUE_HttP_HTTPSERVLET_H
 #include <functional>
 #include <memory>
 #include <string>

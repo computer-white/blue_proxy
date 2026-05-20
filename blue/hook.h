@@ -1,5 +1,5 @@
-#ifndef __BLUE_HOOK_H__
-#define __BLUE_HOOK_H__
+#ifndef BLUE_HOOK_H
+#define BLUE_HOOK_H
 #include <unistd.h>
 #include <time.h>
 #include <sys/types.h>

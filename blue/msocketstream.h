@@ -1,3 +1,5 @@
+#ifndef BLUE_MSOCKETSTREAM_H
+#define BLUE_MSOCKETSTREAM_H
 #include "msocket.h"
 #include "mstream.h"
 
@@ -76,3 +78,4 @@ namespace blue
             bool m_owner;
     };
 }
+#endif

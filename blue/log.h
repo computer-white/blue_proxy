@@ -1,5 +1,5 @@
-#ifndef __BLUE_LOG_H__
-#define __BLUE_LOG_H__
+#ifndef BLUE_LOG_H
+#define BLUE_LOG_H
 #include <string>
 #include <stdint.h>
 #include <memory>
