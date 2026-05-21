@@ -46,6 +46,9 @@ namespace blue
                  */
                 virtual void handleClient(MSocket::MSocketPtr sock) override;
             private:
+
+                void _handleAdmin(HttpRequest::HttpRequestPtr request, HttpResponse::HttpResponsePtr response, HttpSession::HttpSessionPtr session);
+
                 void _handleConnect(MSocket::MSocketPtr sock,
                                             HttpRequest::HttpRequestPtr request);
                 /**

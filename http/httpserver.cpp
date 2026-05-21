@@ -1,6 +1,10 @@
 #include <regex>
+#include <chrono>
 #include <fcntl.h>
 #include "blue/log.h"
+#include "blue/config.h"
+#include "blue/dbmanager.h"
+#include "blue/redismanager.h"
 #include "httpserver.h"
 #include "httpconnection.h"
 #ifdef USE_GUMBO
@@ -13,6 +17,128 @@ namespace blue
     {
         static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
             
+        // 全局连接池缓存
+        static std::map<std::string, HttpConnectionPool::HttpConnectionPoolPtr> s_pools;
+        static http::HttpConnectionPool::MmutexType s_poolMutex;
+        
+        static blue::ConfigVar<std::string>::ConfigVarPtr g_db_host = 
+                blue::Config::Lookup<std::string>("db.host","localhost","db host");
+
+        static blue::ConfigVar<std::string>::ConfigVarPtr g_db_user = 
+                blue::Config::Lookup<std::string>("db.user","blue","db user");
+        
+        static blue::ConfigVar<std::string>::ConfigVarPtr g_db_passward = 
+                blue::Config::Lookup<std::string>("db.passward","LLd20051014.","db passward");
+        
+        static blue::ConfigVar<std::string>::ConfigVarPtr g_db_database = 
+                blue::Config::Lookup<std::string>("db.database","blue_proxy","db database");
+        
+        static blue::ConfigVar<uint16_t>::ConfigVarPtr g_db_port = 
+                blue::Config::Lookup<uint16_t>("db.port",3306,"db port");
+            
+        static blue::ConfigVar<std::string>::ConfigVarPtr g_redis_host = 
+                blue::Config::Lookup<std::string>("redis.host","127.0.0.1","redis host");
+        
+        static blue::ConfigVar<uint16_t>::ConfigVarPtr g_redis_port = 
+                blue::Config::Lookup<uint16_t>("redis.port",6379,"redis port");
+        
+        static blue::ConfigVar<std::string>::ConfigVarPtr g_redis_passward = 
+                blue::Config::Lookup<std::string>("redis.passward","lld200510","redis passward");
+
+        static blue::ConfigVar<uint64_t>::ConfigVarPtr g_rate_limit = 
+                blue::Config::Lookup<uint64_t>("redis.rate_limit",100,"redis rate limit");
+
+        static blue::ConfigVar<uint64_t>::ConfigVarPtr g_rate_limit_expire = 
+                blue::Config::Lookup<uint64_t>("redis.rate_limit_expire",60,"redis rate limit expire");
+
+        static blue::ConfigVar<uint64_t>::ConfigVarPtr g_cache_expire = 
+                blue::Config::Lookup<uint64_t>("redis.cache_expire",60,"redis cache expire");
+        
+        static std::string s_db_host = "";
+        static std::string s_db_user = "";
+        static std::string s_db_database = "";
+        static std::string s_db_passward = "";
+        static uint16_t s_db_port = 3306;
+        static blue::DbManager::DbManagerPtr s_dbmanager_ptr = nullptr;
+
+        static std::string s_redis_host = "";
+        static uint16_t s_redis_port = 6379;
+        static std::string s_redis_passward = "";
+        static blue::RedisManager::RedisManagerPtr s_redismanager_ptr = nullptr;
+
+        static uint64_t s_rate_limit = 0;
+        static uint64_t s_rate_limit_expire = 0;
+        static uint64_t s_cache_expire = 0;
+
+        struct __DbManagerIniter__
+        {
+            __DbManagerIniter__()
+            {
+                // db
+                s_db_host = g_db_host->getValue();
+                s_db_user = g_db_user->getValue();
+                s_db_passward = g_db_passward->getValue();
+                s_db_database = g_db_database->getValue();
+                s_db_port = g_db_port->getValue();
+                s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
+
+                g_db_host->addListener([](const std::string &old_val, const std::string &new_val){
+                    s_db_host = new_val;
+                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
+                });
+                g_db_user->addListener([](const std::string &old_val, const std::string &new_val){
+                    s_db_user= new_val;
+                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
+                });
+                g_db_passward->addListener([](const std::string &old_val, const std::string &new_val){
+                    s_db_passward= new_val;
+                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
+                });
+                g_db_database->addListener([](const std::string &old_val, const std::string &new_val){
+                    s_db_database = new_val;
+                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
+                });
+                g_db_port->addListener([](const uint16_t &old_val, const uint16_t &new_val){
+                    s_db_port = new_val;
+                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
+                });
+
+                // redis
+                s_redis_host = g_redis_host->getValue();
+                s_redis_passward = g_redis_passward->getValue();
+                s_redis_port = g_redis_port->getValue();
+                s_redismanager_ptr = blue::RedisManager::Create(s_redis_host,s_redis_port,s_redis_passward);
+
+                g_redis_host->addListener([](const std::string &old_val, const std::string &new_val){
+                    s_redis_host = new_val;
+                    s_redismanager_ptr = blue::RedisManager::Create(s_redis_host,s_redis_port,s_redis_passward);
+                });
+                g_redis_passward->addListener([](const std::string &old_val, const std::string &new_val){
+                    s_redis_passward = new_val;
+                    s_redismanager_ptr = blue::RedisManager::Create(s_redis_host,s_redis_port,s_redis_passward);
+                });
+                g_redis_port->addListener([](const uint16_t &old_val, const uint16_t &new_val){
+                    s_redis_port = new_val;
+                    s_redismanager_ptr = blue::RedisManager::Create(s_redis_host,s_redis_port,s_redis_passward);
+                });
+
+                s_rate_limit = g_rate_limit->getValue();
+                s_rate_limit_expire = g_rate_limit_expire->getValue();
+                s_cache_expire = g_cache_expire->getValue();
+                g_rate_limit->addListener([](const uint64_t &old_val, const uint64_t &new_val){
+                    s_rate_limit = new_val;
+                });
+                g_cache_expire->addListener([](const uint64_t &old_val, const uint64_t &new_val){
+                    s_cache_expire = new_val;
+                });
+                g_rate_limit_expire->addListener([](const uint64_t &old_val, const uint64_t &new_val){
+                    s_rate_limit_expire = new_val;
+                });
+
+            }
+        };
+        
+        static __DbManagerIniter__ __S_DbManager_Initer__;
         // static std::map<std::string, HttpConnectionPool::HttpConnectionPoolPtr> s_poolCache;
         // static Mmutex s_poolMutex;  
         /*
@@ -628,39 +754,64 @@ namespace blue
                     session->close();
                     return;
                 }
-                // BLUE_LOG_INFO(g_logger) << "host : " << requestPtr->getHeader("Host");
                 auto responsePtr = std::make_shared<HttpResponse>(requestPtr->getVersion(), (requestPtr->isKeepAlive() || temkeepAlive));
                 temkeepAlive = (requestPtr->isKeepAlive() || temkeepAlive);
+
+                std::string path = requestPtr->getPath();
+                std::string host = requestPtr->getHeader("Host");
+                BLUE_LOG_INFO(g_logger) << "path : " << path << " host : " << host;
+                std::string targeturl;
+                std::string target_param = requestPtr->getParam("target", "");
 
                 if (requestPtr->getMethod() == HttpMethod::CONNECT)
                 {
                     BLUE_LOG_INFO(g_logger) << "CONNECT: " << requestPtr->getPath();
                     _handleConnect(sock, requestPtr);
-                    return;  // CONNECT 不进入普通处理流程
+                    return;  // CONNECT
                 }
-                std::string path = requestPtr->getPath();
-                std::string host = requestPtr->getHeader("Host");
-                std::string targeturl;
-                std::string target_param = requestPtr->getParam("target", "");
+
                 if (!target_param.empty())
                 {
                     targeturl = target_param;
-                    // BLUE_LOG_INFO(g_logger) << "Old format target: " << targeturl;
+                    // 整个path带有/blue...
+                    std::string extra = path;
+                    size_t blue_pos = extra.find("/blue");
+                    if (blue_pos != std::string::npos)
+                    {
+                        extra = extra.substr(blue_pos + strlen("/blue"));
+                    }
+                    if (!extra.empty() && extra != "/")
+                    {
+                        auto u = blue::Url::CreateUrl(targeturl);
+                        if (u)
+                        {
+                            targeturl = u->getScheme() + "://" + u->getAuthority() + extra;
+                            std::string q = u->getQuery();
+                            if (!q.empty()) targeturl += "?" + q;
+                        }
+                    }
                     _forwardRequest(requestPtr, responsePtr, targeturl, false);
                 }
+
                 // ===== 正向代理 =====
                 // 正向代理：Host 不是 localhost，path 就是目标路径
                 else if (!host.empty() && 
                         host.find("localhost") == std::string::npos && 
                         host.find("127.0.0.1") == std::string::npos)
                 {
-                    targeturl = "http://" + host + path;
-                    std::string query = requestPtr->getQuery();
-                    if (!query.empty()) targeturl += "?" + query;
-                    
-                    // BLUE_LOG_INFO(g_logger) << "Forward proxy: " << targeturl;
+                   if (path.find("http://") == 0 || path.find("https://") == 0)
+                    {
+                        targeturl = path;
+                    }
+                    else
+                    {
+                        targeturl = "http://" + host + path;
+                        std::string query = requestPtr->getQuery();
+                        if (!query.empty()) targeturl += "?" + query;
+                    }
                     _forwardRequest(requestPtr, responsePtr, targeturl, true);
                 }
+
                 // ===== 反向代理（路径前缀模式）=====
                 else if (path.find("/blue/") == 0)
                 {
@@ -669,19 +820,46 @@ namespace blue
                         scheme_pos = path.find("https://");
                     if (scheme_pos != std::string::npos)
                     {
-                        targeturl = path.substr(scheme_pos);
-                        // BLUE_LOG_INFO(g_logger) << "Reverse proxy: " << targeturl;
+                        // /blue/xxx/https://www.baidu.com/news
+                        //              ↑ scheme_pos
+                        targeturl = path.substr(scheme_pos);  // "https://www.baidu.com/news"
+                        
+                        // 提取中间路径：/blue 和 scheme 之间的部分
+                        std::string middle = path.substr(strlen("/blue"), scheme_pos - strlen("/blue"));
+                        BLUE_LOG_INFO(g_logger) << "middle : " << middle;
+                        // middle = "/xxx"
+                        // 如果 middle 不为空，拼到 target URL 的 path 上
+                        if (!middle.empty() && middle != "/")
+                        {
+                            // 去掉 middle 尾部斜杠
+                            while (!middle.empty() && middle.back() == '/')
+                                middle.pop_back();
+                            // 去掉 middle 首部斜杠
+                            if (!middle.empty() && middle.front() == '/')
+                                middle.erase(0, 1);
+                            
+                            auto u = blue::Url::CreateUrl(targeturl);
+                            if (u)
+                            {
+                                // 用 middle 作为实际路径
+                                targeturl = u->getScheme() + "://" + u->getAuthority() + "/" + middle;
+                                std::string q = u->getQuery();
+                                if (!q.empty()) targeturl += "?" + q;
+                            }
+                        }
                         _forwardRequest(requestPtr, responsePtr, targeturl, false);
                     }
                     else
                     {
-                        // BLUE_LOG_INFO(g_logger) << "no target";
                         m_dispatch->handle(requestPtr, responsePtr, session);
                     }
                 }
+                else if (path.find("/admin/") == 0 || path == "/admin")
+                {
+                    _handleAdmin(requestPtr, responsePtr, session);
+                }
                 else
                 {
-                    // BLUE_LOG_INFO(g_logger) << "no target";
                     m_dispatch->handle(requestPtr, responsePtr, session);
                 }
                 // 自动补全缺失的响应头
@@ -730,8 +908,56 @@ namespace blue
                                             const std::string &targeturl,
                                             bool isForwardProxy)
         {
-
-            // 设置下游ip(remoteip)
+            // ===== Redis 缓存（正向代理 GET 请求）=====
+            std::string cache_key;
+            bool use_cache = false;
+            if (isForwardProxy && (request->getMethod() == HttpMethod::GET && s_redismanager_ptr))
+            {
+                use_cache = true;
+                cache_key = "cache:" + targeturl;
+                std::string cached = s_redismanager_ptr->get(cache_key);
+                if (!cached.empty())
+                {
+                    response->setBody(cached);
+                    response->setHeader("Content-Length", std::to_string(cached.size()));
+                    response->setHeader("X-Cache", "HIT");
+                    response->setStatus(blue::http::HttpStatus::OK);
+                    return;
+                }
+            }
+            // ===== Redis 缓存（反向代理 GET 请求）=====
+            if (!isForwardProxy && (request->getMethod() == HttpMethod::GET && s_redismanager_ptr))
+            {
+                use_cache = true;
+                cache_key = "rcache:" + targeturl;
+                std::string cached = s_redismanager_ptr->get(cache_key);
+                if (!cached.empty())
+                {
+                    response->setBody(cached);
+                    response->setHeader("Content-Length",std::to_string(cached.size()));
+                    response->setHeader("X-Cache","HIT");
+                    response->setStatus(blue::http::HttpStatus::OK);
+                    return;
+                }
+            }
+            // 对于同一个客户端请求进行限流
+            if (s_redismanager_ptr)
+            {
+                std::string key = "rate:" + m_remoteIP;
+                long long count = s_redismanager_ptr->incr(key);
+                if (count == 1)
+                {
+                    // 设置60秒窗口
+                    s_redismanager_ptr->expire(key, s_rate_limit_expire);  // 窗口
+                }
+                if (count > s_rate_limit)  // 每分钟最多rate_limit个请求
+                {
+                    response->setStatus(blue::http::HttpStatus::TOO_MANY_REQUESTS);
+                    response->setBody("Rate limit exceeded");
+                    return;
+                }
+            }
+            // 设置下游(client)ip(remoteip)
             std::string xxf = request->getHeader("X-Forwarded-For");
             if (!xxf.empty())
             {
@@ -746,42 +972,19 @@ namespace blue
                 response->setBody("invalid target url");
                 return;
             }
-            // else
-            // {
-            //     BLUE_LOG_WARN(g_logger) << "DoRequest URL: " << targeturl 
-            //                 << " path: " << UrlPtr->getPath()
-            //                 << " host: " << UrlPtr->getHost();
-            // }
 
             // 代理前缀
             std::string proxy_path = "/blue";
-            // BLUE_LOG_INFO(g_logger) << "Proxy path: " << proxy_path
-            //                         << ", target: " << targeturl;
 
             // 将客户端的请求中的header拿出来作为我们发给targeturl的header
             std::map<std::string,std::string> headers;
             _setHeaders(request,headers);
 
-            // BLUE_LOG_WARN(g_logger) << "=== Request to target ===";
-            // BLUE_LOG_WARN(g_logger) << "URL: " << targeturl;
-            // BLUE_LOG_WARN(g_logger) << "Method: " << (int)request->getMethod();
-            // BLUE_LOG_WARN(g_logger) << "Headers:";
-            // for (auto& h : headers) {
-            //     BLUE_LOG_WARN(g_logger) << "  " << h.first << ": " << h.second;
-            // }
-            // BLUE_LOG_WARN(g_logger) << "Body size: " << request->getBody().size();
-
-            // 同步转发给上游(非连接池)
-            // auto result = blue::http::HttpConnection::DoRequest(
-            //     request->getMethod(), targeturl, 5000, headers, request->getBody());
-
             std::string poolKey = UrlPtr->getScheme() + "://" + UrlPtr->getHost() + ":" + std::to_string(UrlPtr->getPort());
-            // 全局连接池缓存
-            static std::map<std::string, HttpConnectionPool::HttpConnectionPoolPtr> s_pools;
-            static http::HttpConnectionPool::MmutexType s_poolMutex;
+
             HttpConnectionPool::HttpConnectionPoolPtr pool;
             {
-                blue::http::HttpConnectionPool::MmutexType lock(s_poolMutex);
+                blue::http::HttpConnectionPool::MmutexType::lockSco lock(s_poolMutex);
                 auto it = s_pools.find(poolKey);
                 if (it == s_pools.end())
                 {
@@ -794,9 +997,39 @@ namespace blue
                     pool = it->second;
                 }
             }
+
+            // 转发
+            auto now = std::chrono::steady_clock::now();
             // 用连接池发请求（复用连接）
             auto result = pool->doRequest(request->getMethod(), UrlPtr, 5000, headers, request->getBody());
+            auto end = std::chrono::steady_clock::now();
+            int duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - now).count();
 
+            // 记录日志
+            if (s_dbmanager_ptr)
+            {
+                std::string method_str = http::HttpMethodToChars(request->getMethod());
+                int status_code = 0;
+                int body_size = 0;
+                std::string error_msg;
+                
+                if (result->response)
+                {
+                    status_code = (int)result->response->getStatus();
+                    body_size = result->response->getBody().size();
+                }
+                if (!result->error.empty())
+                {
+                    error_msg = result->error;
+                }
+                
+                s_dbmanager_ptr->logRequest(m_remoteIP, 
+                                method_str,
+                                targeturl, UrlPtr->getHost(),
+                                status_code, body_size,
+                                request->getHeader("User-Agent"),
+                                duration, isForwardProxy, false, error_msg);
+            }
             if (result->result == (int)blue::http::HttpResult::ResultStatus::OK && result->response)
             {
                 for (auto &header : result->response->getHeaders())
@@ -805,14 +1038,23 @@ namespace blue
                 }
                 response->delHeader("Transfer-Encoding"); // 和 Content-Length 互斥
                 int status = (int)result->response->getStatus();
+
+                // ===== 正向代理：透传 + 存缓存 =====
                 if (isForwardProxy)
                 {
                     response->setBody(result->response->getBody());
                     response->setHeader("Content-Length", std::to_string(result->response->getBody().size()));
                     response->setStatus((blue::http::HttpStatus)status);
+                    // 缓存响应（60 秒）
+                    if (use_cache && status == 200)
+                    {
+                        s_redismanager_ptr->set(cache_key, result->response->getBody(), s_cache_expire);
+                        response->setHeader("X-Cache", "MISS");
+                    }
                     return;
                 }
 
+                // ===== 反向代理：重写 HTML/CSS =====
                 if (status == 301 || status == 302 || status == 307 || status == 308)
                 {
                     std::string location = result->response->getHeader("Location");
@@ -823,8 +1065,14 @@ namespace blue
                         if (location == targeturl || location == targeturl + "/") 
                         {
                             BLUE_LOG_WARN(g_logger) << "Redirect loop detected: " << location;
+                            std::string err = "Redirect loop detected";
                             response->setStatus(blue::http::HttpStatus::BAD_GATEWAY);
-                            response->setBody("Redirect loop detected");
+                            response->setBody(err);
+                            response->setHeader("Content-Length",std::to_string(err.size()));
+                            if (use_cache)
+                            {
+                                s_redismanager_ptr->set(cache_key,err,s_cache_expire);
+                            }
                             return;
                         }
 
@@ -834,8 +1082,10 @@ namespace blue
                         response->delHeader("Content-Length"); // 重定向没有 body
                         response->setBody("");                 // 清空 body
                         response->setStatus((blue::http::HttpStatus)status);
-                        // BLUE_LOG_WARN(g_logger) << "Rewrite redirect: "
-                        //                         << location << " → " << new_location;
+                        if (use_cache)
+                        {
+                            s_redismanager_ptr->set(cache_key,"",s_cache_expire);
+                        }
                         return;
                     }
                 }
@@ -856,9 +1106,6 @@ namespace blue
                     response->setStatus((blue::http::HttpStatus)status);
                     // 设置的修改后未压缩大小,稍后在sendresponse时会设置压缩后的length
                     response->setHeader("Content-Length", std::to_string(modified_body.size()));
-                    // BLUE_LOG_INFO(g_logger) << "HTML modified, original: "
-                    //                         << original_html.size() << "B, modified: "
-                    //                         << modified_body.size() << "B";
                 }
                 else if (ContentType.find("text/css") != std::string::npos)
                 {
@@ -879,6 +1126,10 @@ namespace blue
                 {
                     response->setHeader("Content-Type", ContentType);
                 }
+                if (use_cache)
+                {
+                    s_redismanager_ptr->set(cache_key,response->getBody(),s_cache_expire);
+                }
             }
             else
             {
@@ -888,12 +1139,121 @@ namespace blue
         }
 
         template <typename T>
+        void HttpServer<T>::_handleAdmin(HttpRequest::HttpRequestPtr request, 
+                        HttpResponse::HttpResponsePtr response, 
+                        HttpSession::HttpSessionPtr session)
+        {
+            std::string sub_path = request->getPath().substr(strlen("/admin"));
+            if (sub_path.empty() || sub_path == "/")
+                sub_path = "/index";
+            std::string body;
+            
+            if (sub_path == "/index")
+            {
+                body = R"(<!DOCTYPE html>
+                    <html><head><meta charset="UTF-8"><title>Blue Proxy</title>
+                    <style>
+                    *{margin:0;padding:0;box-sizing:border-box}
+                    body{font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px}
+                    h1{color:#1677ff;margin-bottom:20px}
+                    .card{background:#16213e;border-radius:8px;padding:20px;margin-bottom:20px}
+                    .card h2{color:#e94560;margin-bottom:10px;font-size:16px}
+                    .stat{display:inline-block;margin:10px 20px 10px 0}
+                    .stat .val{font-size:24px;color:#1677ff}
+                    .stat .label{font-size:12px;color:#888}
+                    table{width:100%;border-collapse:collapse;margin-top:10px}
+                    th{text-align:left;padding:8px;border-bottom:2px solid #e94560;color:#e94560}
+                    td{padding:8px;border-bottom:1px solid #333;font-size:13px}
+                    tr:hover{background:#0f3460}
+                    a{color:#1677ff;text-decoration:none}
+                    .menu{display:flex;gap:20px;margin-bottom:20px}
+                    .menu a{padding:8px 16px;background:#16213e;border-radius:4px}
+                    .menu a:hover{background:#0f3460}
+                    </style></head><body>
+                    <h1>🔵 Blue Proxy</h1>
+                    <div class="menu">
+                    <a href="/admin/index">Dashboard</a>
+                    <a href="/admin/logs">Request Logs</a>
+                    <a href="/admin/pools">Pool Stats</a>
+                    <a href="/admin/config">Config</a>
+                    </div>
+                    <div class="card">
+                    <h2>Server Info</h2>
+                    <div class="stat"><div class="val">)" + std::to_string(blue::Fiber::TotalFibers()) + R"(</div><div class="label">Fibers</div></div>
+                    <div class="stat"><div class="val">)" + std::to_string(s_pools.size()) + R"(</div><div class="label">Connection Pools</div></div>
+                    </div>
+                    </body></html>)";
+            }
+            else if (sub_path == "/logs")
+            {
+                body = "<html><head><meta charset='UTF-8'><title>Logs</title></head><body><h1>Request Logs</h1>";
+                if (s_dbmanager_ptr)
+                {
+                    auto res = s_dbmanager_ptr->query("SELECT id,client_ip,target_url,status_code,duration_ms,created_at FROM request_logs ORDER BY id DESC LIMIT 50");
+                    if (res)
+                    {
+                        body += "<table><tr><th>ID</th><th>IP</th><th>Target</th><th>Status</th><th>Time</th><th>Date</th></tr>";
+                        MYSQL_ROW row;
+                        while ((row = mysql_fetch_row(res)))
+                        {
+                            body += "<tr><td>" + std::string(row[0] ? row[0] : "-") +
+                                    "</td><td>" + std::string(row[1] ? row[1] : "-") +
+                                    "</td><td style='max-width:300px;overflow:hidden'>" + std::string(row[2] ? row[2] : "-") +
+                                    "</td><td>" + std::string(row[3] ? row[3] : "-") +
+                                    "</td><td>" + std::string(row[4] ? row[4] : "-") + "ms" +
+                                    "</td><td>" + std::string(row[5] ? row[5] : "-") + "</td></tr>";
+                        }
+                        body += "</table>";
+                        mysql_free_result(res);
+                    }
+                }
+                body += "</body></html>";
+            }
+            else if (sub_path == "/pools")
+            {
+                body = R"(<html><head><meta charset='UTF-8'><title>Pool Stats</title>
+                        <style>body{font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px}
+                        h1{color:#1677ff}.card{background:#16213e;border-radius:8px;padding:20px;margin:20px 0}
+                        table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px;border-bottom:2px solid #e94560;color:#e94560}
+                        td{padding:8px;border-bottom:1px solid #333}a{color:#1677ff}</style></head><body>
+                        <h1>🔗 Connection Pools</h1><a href='/admin/index'>← Back</a><div class='card'><table>
+                        <tr><th>Pool Key</th><th>Total</th><th>Idle</th></tr>)";
+
+                for (auto& [key, pool] : s_pools)
+                {
+                    body += "<tr><td>" + key + "</td><td>" + std::to_string(pool->getTotalCounts()) +
+                            "</td><td>" + std::to_string(pool->getIdleCounts()) + "</td></tr>";
+                }
+                body += "</table></div></body></html>";
+            }
+            else if (sub_path == "/config")
+            {
+                body = R"(<html><head><meta charset='UTF-8'><title>Config</title>
+                        <style>body{font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px}
+                        h1{color:#1677ff}.card{background:#16213e;border-radius:8px;padding:20px;margin:20px 0}
+                        table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px;border-bottom:2px solid #e94560;color:#e94560}
+                        td{padding:8px;border-bottom:1px solid #333}a{color:#1677ff}</style></head><body>
+                        <h1>⚙️ Configuration</h1><a href='/admin/index'>← Back</a><div class='card'><table>
+                        <tr><th>Key</th><th>Value</th><th>Description</th></tr>
+                        <tr><td>proxy.rate_limit</td><td>)" + std::to_string(g_rate_limit->getValue()) + R"(</td><td>Rate limit per minute</td></tr>
+                        <tr><td>proxy.cache_ttl</td><td>)" + std::to_string(g_cache_expire->getValue()) + R"(</td><td>Cache TTL (seconds)</td></tr>
+                        <tr><td>db.host</td><td>)" + g_db_host->getValue() + R"(</td><td>Database host</td></tr>
+                        <tr><td>db.database</td><td>)" + g_db_database->getValue() + R"(</td><td>Database name</td></tr>
+                        <tr><td>redis.host</td><td>)" + g_redis_host->getValue() + R"(</td><td>Redis host</td></tr>
+                        </table></div></body></html>)";
+            
+            }
+            
+            response->setBody(body);
+            response->setHeader("Content-Type", "text/html; charset=utf-8");
+            response->setHeader("Content-Length", std::to_string(body.size()));
+            response->setStatus(blue::http::HttpStatus::OK);
+        }
+
+        template <typename T>
         void HttpServer<T>::_handleConnect(MSocket::MSocketPtr sock,
                                             HttpRequest::HttpRequestPtr request)
         {
-            // BLUE_LOG_WARN(g_logger) << "CONNECT path: " << request->getPath()
-            //             << " host: " << request->getHeader("Host")
-            //             << " query: " << request->getQuery();
             // CONNECT 的 path 是 host:port
             std::string host_port = request->getHeader("Host");
             if (host_port.empty())
@@ -923,11 +1283,12 @@ namespace blue
             
             int client_fd = sock->getSocketfd();
             int remote_fd = remote_sock->getSocketfd();
+
+
             // 返回 200 给浏览器，表示隧道建立
             std::string ok = "HTTP/1.1 200 Connection Established\r\n\r\n";
             ::send(client_fd, ok.c_str(), ok.size(), 0);
             BLUE_LOG_INFO(g_logger) << "CONNECT tunnel established";
-            
             
             char buf[16384];
             fd_set fds;
@@ -939,45 +1300,51 @@ namespace blue
                 FD_SET(remote_fd, &fds);
                 
                 int max_fd = std::max(client_fd, remote_fd);
-                struct timeval tv = {5, 0};
+                struct timeval tv = {0, 100000};
                 
-                int ret = select(max_fd + 1, &fds, nullptr, nullptr, nullptr);
-                if (ret <= 0)
+                int ret = select(max_fd + 1, &fds, nullptr, nullptr, &tv);
+                if (ret < 0)
                 {
                     BLUE_LOG_WARN(g_logger) << "CONNECT select timeout or error: " << ret;
                     break;
                 }
-                
-                if (FD_ISSET(client_fd, &fds))
+                else if (ret == 0)
                 {
-                    ssize_t n = ::recv(client_fd, buf, sizeof(buf), 0);
-                    if (n <= 0)
-                    {
-                        BLUE_LOG_INFO(g_logger) << "CONNECT client closed, n=" << n;
-                        break;
-                    }
-                    ssize_t sent = ::send(remote_fd, buf, n, 0);
-                    if (sent <= 0)
-                    {
-                        BLUE_LOG_INFO(g_logger) << "CONNECT remote send failed: " << sent 
-                            << " errno=" << errno << " " << strerror(errno);
-                        break;
-                    }
+                    blue::Fiber::YieldToHold();
                 }
-                
-                if (FD_ISSET(remote_fd, &fds))
+                else
                 {
-                    ssize_t n = ::recv(remote_fd, buf, sizeof(buf), 0);
-                    if (n <= 0)
+                    if (FD_ISSET(client_fd, &fds))
                     {
-                        BLUE_LOG_INFO(g_logger) << "CONNECT remote closed, n=" << n;
-                        break;
+                        ssize_t n = ::recv(client_fd, buf, sizeof(buf), 0);
+                        if (n <= 0)
+                        {
+                            BLUE_LOG_INFO(g_logger) << "CONNECT client closed, n=" << n;
+                            break;
+                        }
+                        ssize_t sent = ::send(remote_fd, buf, n, 0);
+                        if (sent <= 0)
+                        {
+                            BLUE_LOG_INFO(g_logger) << "CONNECT remote send failed: " << sent 
+                                << " errno=" << errno << " " << strerror(errno);
+                            break;
+                        }
                     }
-                    ssize_t sent = ::send(client_fd, buf, n, 0);
-                    if (sent <= 0)
+                    
+                    if (FD_ISSET(remote_fd, &fds))
                     {
-                        BLUE_LOG_INFO(g_logger) << "CONNECT client send failed: " << sent;
-                        break;
+                        ssize_t n = ::recv(remote_fd, buf, sizeof(buf), 0);
+                        if (n <= 0)
+                        {
+                            BLUE_LOG_INFO(g_logger) << "CONNECT remote closed, n=" << n;
+                            break;
+                        }
+                        ssize_t sent = ::send(client_fd, buf, n, 0);
+                        if (sent <= 0)
+                        {
+                            BLUE_LOG_INFO(g_logger) << "CONNECT client send failed: " << sent;
+                            break;
+                        }
                     }
                 }
             }
