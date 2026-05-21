@@ -273,14 +273,24 @@ namespace blue
             std::shared_ptr<HttpResult> doRequest(http::HttpRequest::HttpRequestPtr req,
                                                   uint64_t timeout);
 
+            /**
+             * @brief 获取idle connection 数量(pool大小)
+             */
+            uint32_t getIdleCounts() const;
+
+            /**
+             * @brief 获取total connection 数量
+             */
+            uint32_t getTotalCounts() const { return m_total.load(std::memory_order_acquire); }
+
         private:
             static void ReleasePtr(HttpConnection *conn, HttpConnectionPool *pool);
 
         private:
-            MmutexType m_mutex;                  // 互斥变量
+            mutable MmutexType m_mutex;          // 互斥变量
             std::string m_scheme;                // scheme
-            std::string m_host;                  // 主机
-            std::string m_vhost;                 //
+            std::string m_host;                  // 真实目标主机(实际连接的 IP)
+            std::string m_vhost;                 // 虚拟主机
             uint64_t m_maxAliveTime;             // 每个连接的最大存活时长
             uint32_t m_maxSize;                  // 连接池的最大大小
             uint32_t m_maxRequest;               // 最大支持的连接数

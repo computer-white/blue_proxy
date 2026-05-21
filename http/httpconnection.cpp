@@ -314,6 +314,13 @@ namespace blue
               m_maxRequest(maxRequest), m_port(port)
         {
         }
+
+        uint32_t HttpConnectionPool::getIdleCounts() const
+        {
+            MmutexType::lockSco lock(m_mutex);
+            return m_pool.size();
+        }
+
         HttpConnection::HttpConnectionPtr HttpConnectionPool::getConnnection()
         {
             uint64_t nowms = blue::GetCurrentMs();
