@@ -1,49 +1,15 @@
 #ifndef BLUE_MTHREAD_H
 #define BLUE_MTHREAD_H
+#include <mutex>
+#include <shared_mutex>
 #include <thread>
 #include <functional>
 #include <future>
 #include <memory>
-#include <semaphore.h>
-#include <pthread.h>
 #include <atomic>
 
 namespace blue
 {
-    // 信号量
-    class Semaphore
-    {
-    public:
-        /**
-         * @brief 信号量构造函数
-         * @param value 信号值
-         * @return
-         */
-        Semaphore(uint32_t value = 0);
-        ~Semaphore();
-
-        /**
-         * @brief 信号量等待被唤醒
-         * @return
-         */
-        void wait();
-
-        /**
-         * @brief 唤醒信号量
-         * @return
-         */
-        void notify();
-
-    public:
-        Semaphore(const Semaphore &) = delete;
-        Semaphore(Semaphore &&) = delete;
-        Semaphore &operator=(const Semaphore &) = delete;
-        Semaphore &operator=(Semaphore &&) = delete;
-
-    private:
-        sem_t m_semaphore;
-    };
-
     // 互斥锁模板
     template <typename T>
     class ScopedlockedImpl
@@ -127,7 +93,7 @@ namespace blue
          */
         int try_lock()
         {
-            int ret = m_mutex.try_rdlock();
+            int ret = m_mutex.try_lock_shared();
             if (ret == 0)
             {
                 m_locked = true;
@@ -143,7 +109,7 @@ namespace blue
         {
             if (!m_locked)
             {
-                m_mutex.rdlock();
+                m_mutex.lock_shared();
                 m_locked = true;
             }
         }
@@ -156,7 +122,7 @@ namespace blue
         {
             if (m_locked)
             {
-                m_mutex.unlock();
+                m_mutex.unlock_shared();
                 m_locked = false;
             }
         }
@@ -190,7 +156,7 @@ namespace blue
          */
         int try_lock()
         {
-            int ret = m_mutex.try_wrlock();
+            int ret = m_mutex.try_lock();
             if (ret == 0)
             {
                 m_locked = true;
@@ -206,7 +172,7 @@ namespace blue
         {
             if (!m_locked)
             {
-                m_mutex.wrlock();
+                m_mutex.lock();
                 m_locked = true;
             }
         }
@@ -233,275 +199,24 @@ namespace blue
         bool m_locked = false;
     };
 
-    // 互斥锁
-    class Mmutex
+    class Mmutex : public std::mutex
     {
     public:
-        using lockSco = ScopedlockedImpl<Mmutex>;
-        Mmutex()
-        {
-            // 初始化互斥锁,将其初始化为PTHREAD_MUTEX_INITIALIZER
-            pthread_mutex_init(&m_mutex, nullptr);
-        }
-
-        ~Mmutex()
-        {
-            pthread_mutex_destroy(&m_mutex);
-        }
-
-        /**
-         * @brief 尝试获取锁
-         * @return if successful, return 0
-         */
-        int try_lock()
-        {
-            return pthread_mutex_trylock(&m_mutex);
-        }
-
-        /**
-         * @brief 获取锁
-         * @return
-         */
-        void lock()
-        {
-            int ret = pthread_mutex_lock(&m_mutex);
-            if (ret != 0)
-            {
-                throw std::system_error(ret, std::system_category(),
-                                        "pthread_mutex_lock failed");
-            }
-        }
-
-        /**
-         * @brief 解锁
-         * @return
-         */
-        void unlock()
-        {
-            int ret = pthread_mutex_unlock(&m_mutex);
-            if (ret != 0)
-            {
-                throw std::system_error(ret, std::system_category(),
-                                        "pthread_mutex_unlock failed");
-            }
-        }
-
-    private:
-        pthread_mutex_t m_mutex;
+        using lockSco = ScopedlockedImpl<std::mutex>;
     };
 
-    // 自旋锁
-    class SpinLockMutex
+    class SpinLockMutex : public std::mutex
     {
     public:
-        using lockSco = ScopedlockedImpl<SpinLockMutex>;
-        SpinLockMutex()
-        {
-            // PTHREAD_PROCESS_PRIVATE 表示自旋锁仅能被初始化该锁的进程下的线程访问
-            // PTHREAD_PROCESS_SHARED 表示自旋锁可以被来自不同进程下的线程访问
-            int ret = pthread_spin_init(&m_lock, PTHREAD_PROCESS_PRIVATE);
-            if (ret != 0)
-            {
-                throw std::system_error(ret, std::system_category(),
-                                        "pthread_spin_init failed");
-            }
-        }
-
-        ~SpinLockMutex()
-        {
-            // 销毁锁
-            pthread_spin_destroy(&m_lock);
-        }
-
-        /**
-         * @brief 获取锁
-         * @return
-         */
-        void lock()
-        {
-            int ret = pthread_spin_lock(&m_lock);
-            if (ret != 0)
-            {
-                throw std::system_error(ret, std::system_category(),
-                                        "pthread_spin_lock failed");
-            }
-        }
-
-        /**
-         * @brief 尝试获取锁
-         * @return if successful, return 0
-         */
-        int try_lock()
-        {
-            return pthread_spin_trylock(&m_lock);
-        }
-
-        /**
-         * @brief 解锁
-         * @return
-         */
-        void unlock()
-        {
-            int ret = pthread_spin_unlock(&m_lock);
-            if (ret != 0)
-            {
-                throw std::system_error(ret, std::system_category(),
-                                        "pthread_spin_unlock failed");
-            }
-        }
-
-    public:
-        // 禁止拷贝和移动
-        SpinLockMutex(const SpinLockMutex &) = delete;
-        SpinLockMutex &operator=(const SpinLockMutex &) = delete;
-        SpinLockMutex(SpinLockMutex &&) = delete;
-        SpinLockMutex &operator=(SpinLockMutex &&) = delete;
-
-    private:
-        pthread_spinlock_t m_lock;
+        using lockSco = ScopedlockedImpl<std::mutex>;
+        using WritelockSco = ScopedlockedImpl<std::mutex>;
     };
 
-    // 自旋锁(原子实现)
-    class CASlock
+    class MRWmutex : public std::shared_mutex
     {
     public:
-        using lockSco = ScopedlockedImpl<CASlock>;
-        CASlock() : m_flag(ATOMIC_FLAG_INIT)
-        {
-            lock();
-        }
-
-        ~CASlock()
-        {
-            unlock();
-        }
-
-        /**
-         * @brief 获取锁
-         * @return
-         */
-        void lock()
-        {
-            // 获取内存序,保证后面的带有指定内存序的操作不会被排到他之前，保证先获取到在进行操作
-            while (std::atomic_flag_test_and_set_explicit(&m_flag, std::memory_order_acquire))
-                ;
-        }
-
-        /**
-         * @brief 解锁
-         * @return
-         */
-        void unlock()
-        {
-            std::atomic_flag_clear_explicit(&m_flag, std::memory_order_release);
-        }
-
-    private:
-        volatile std::atomic_flag m_flag;
-    };
-
-    // 读写锁
-    class MRWmutex
-    {
-    public:
-        using ReadlockSco = ReadScopedlockedImpl<MRWmutex>;
-        using WritelockSco = WriteScopedlockedImpl<MRWmutex>;
-        MRWmutex()
-        {
-            pthread_rwlock_init(&m_rwlock, nullptr);
-        }
-
-        ~MRWmutex()
-        {
-            pthread_rwlock_destroy(&m_rwlock);
-        }
-
-        /**
-         * @brief 尝试获取读锁
-         * @return if successful, return 0
-         */
-        int try_rdlock()
-        {
-            return pthread_rwlock_tryrdlock(&m_rwlock);
-        }
-
-        /**
-         * @brief 尝试获取写锁
-         * @return if successful, return 0
-         */
-        int try_wrlock()
-        {
-            return pthread_rwlock_trywrlock(&m_rwlock);
-        }
-
-        /**
-         * @brief 获取读锁
-         * @return
-         */
-        void rdlock()
-        {
-            int ret = pthread_rwlock_rdlock(&m_rwlock);
-            if (ret != 0)
-            {
-                throw std::system_error(ret, std::system_category(),
-                                        "pthread_rwlock_rdlock failed");
-            }
-        }
-
-        /**
-         * @brief 获取写锁
-         * @return
-         */
-        void wrlock()
-        {
-            int ret = pthread_rwlock_wrlock(&m_rwlock);
-            if (ret != 0)
-            {
-                throw std::system_error(ret, std::system_category(),
-                                        "pthread_rwlock_wrlock failed");
-            }
-        }
-
-        /**
-         * @brief 解锁
-         * @return
-         */
-        void unlock()
-        {
-            pthread_rwlock_unlock(&m_rwlock);
-        }
-
-    public:
-        MRWmutex(const MRWmutex &othr) = delete;
-        MRWmutex(MRWmutex &&othr) = delete;
-        MRWmutex &operator=(const MRWmutex &othr) = delete;
-        MRWmutex &operator=(const MRWmutex &&othr) = delete;
-
-    private:
-        pthread_rwlock_t m_rwlock;
-    };
-
-    // 无锁(对比有锁测试)
-    class NullMutex
-    {
-    public:
-        using lockSco = ScopedlockedImpl<NullMutex>;
-        NullMutex() {}
-        ~NullMutex() {}
-
-        void lock() {}
-        void unlock() {}
-    };
-    class NullRWmutex
-    {
-    public:
-        using ReadLockSco = ReadScopedlockedImpl<NullRWmutex>;
-        using WriteLockSco = WriteScopedlockedImpl<NullRWmutex>;
-        NullRWmutex() {}
-        ~NullRWmutex() {}
-        void rdlock() {}
-        void wrlock() {}
-        void unlock() {}
+        using ReadlockSco = ReadScopedlockedImpl<std::shared_mutex>;
+        using WritelockSco = WriteScopedlockedImpl<std::shared_mutex>;
     };
 
     // 线程
@@ -532,6 +247,11 @@ namespace blue
         void join();
 
         /**
+         * @brief 分离
+         */
+        void detach();
+
+        /**
          * @brief 获取当前线程
          * @return 当前线程的裸指针
          */
@@ -556,7 +276,7 @@ namespace blue
          * @param arg 需要执行的线程指针
          * @return nullptr
          */
-        static void *run(void *arg);
+        static void run(Mthread *);
 
     public:
         Mthread(const Mthread &) = delete;
@@ -564,12 +284,13 @@ namespace blue
         Mthread &operator=(const Mthread &) = delete;
 
     private:
-        pid_t m_id = -1;            // 线程id
-        pthread_t m_thread = 0;     // 线程identify
-        std::function<void()> m_cb; // 回调函数
-        std::string m_name;         // 线程名称
-
-        Semaphore m_semaphore; // 信号量
+        std::mutex m_mutex;                 // mutex
+        pid_t m_id = -1;                    // 线程id
+        std::thread m_thread;               // 线程identify
+        std::function<void()> m_cb;         // 回调函数
+        std::string m_name;                 // 线程名称
+        std::condition_variable m_cv;       // 条件变量
+        std::atomic<bool> m_running{false}; // 原子检测搭配cv使用
     };
 }
 #endif // __BLUE_MTHREAD_H__

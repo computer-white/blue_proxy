@@ -2,11 +2,9 @@
 #define BLUE_FIBER_H
 #include <memory>
 #include <atomic>
-#include <ucontext.h>
+#include <ucontext.h> // 协程
 #include <functional>
 #include "mthread.h"
-#include "context.h"
-
 namespace blue
 {
     class Fiber : public std::enable_shared_from_this<Fiber>
@@ -165,7 +163,7 @@ namespace blue
         uint32_t m_stacksize = 0;
         std::atomic<Status> m_status = Status::INIT;
 
-        Context::ContextPtr m_ctx;
+        ucontext_t m_ctx;
         void *m_stack = nullptr;
 
         std::function<void()> m_cb;

@@ -150,26 +150,42 @@ namespace blue
     {
         SetThis(this);
         m_status.store(init, std::memory_order_release);
-        m_ctx = std::make_shared<Context>();
+        if (getcontext(&m_ctx))
+        {
+            BLUE_ASSERT2(false, "getcontext error");
+        }
+        m_ctx.uc_link = nullptr;
+        m_ctx.uc_stack.ss_sp = nullptr;
+        m_ctx.uc_stack.ss_size = 0;
         ++s_fiber_count;
     }
 
     Fiber::Fiber(std::function<void()> cb, bool use_caller, size_t stacksize) : m_id(++s_fiber_id),
                                                                                 m_cb(cb)
     {
+
         m_status.store(Status::INIT, std::memory_order_release);
         ++s_fiber_count;
         // 非零设置stacksize,为零设置配置中的size
         m_stacksize = stacksize ? stacksize : g_stack_size_ptr->getValue();
 
         m_stack = StackAllocatorType::Alloc(m_stacksize);
+        if (getcontext(&m_ctx))
+        {
+            BLUE_ASSERT2(false, "getcontext error");
+        }
+        m_ctx.uc_link = nullptr;
+        m_ctx.uc_stack.ss_sp = m_stack;
+        m_ctx.uc_stack.ss_size = m_stacksize;
         if (use_caller)
         {
-            m_ctx = std::make_shared<Context>(Fiber::MainCallFunc, m_stack, m_stacksize);
+            // 使用call,back协程上下文切换函数组
+            makecontext(&m_ctx, Fiber::MainCallFunc, 0);
         }
         else
         {
-            m_ctx = std::make_shared<Context>(Fiber::MainFunc, m_stack, m_stacksize);
+            // 使用swapIn,swapOut协程上下文切换函数组
+            makecontext(&m_ctx, Fiber::MainFunc, 0);
         }
     }
 
@@ -182,8 +198,7 @@ namespace blue
 
         if (m_stack)
         {
-            auto status = m_status.load(std::memory_order_acquire);
-            ;
+            auto status = m_status.load(std::memory_order_acquire);;
             BLUE_ASSERT(status == Status::TERM ||
                         status == Status::EXCEPT ||
                         status == Status::INIT);
@@ -215,7 +230,15 @@ namespace blue
                     status == Status::TERM);
         m_status.store(Status::INIT, std::memory_order_release);
         m_cb = cb;
-        m_ctx = std::make_shared<Context>(Fiber::MainFunc, m_stack, m_stacksize);
+        if (getcontext(&m_ctx))
+        {
+            BLUE_ASSERT2(false, "getcontext error");
+        }
+        m_ctx.uc_link = nullptr;
+        m_ctx.uc_stack.ss_sp = m_stack;
+        m_ctx.uc_stack.ss_size = m_stacksize;
+
+        makecontext(&m_ctx, Fiber::MainFunc, 0);
     }
 
     void Fiber::call()
@@ -225,7 +248,10 @@ namespace blue
         BLUE_ASSERT2(this, "this not exit");
         SetThis(this);
         m_status.store(Status::EXEC, std::memory_order_release);
-        Context::Swap(*t_mainfiber->m_ctx, *m_ctx);
+        if (swapcontext(&t_mainfiber->m_ctx, &m_ctx))
+        {
+            BLUE_ASSERT2(false, "swapcontext error");
+        }
     }
 
     void Fiber::back()
@@ -241,7 +267,10 @@ namespace blue
                 m_status.store(Status::HOLD, std::memory_order_release);
             }
         }
-        Context::Swap(*m_ctx, *t_mainfiber->m_ctx);
+        if (swapcontext(&m_ctx, &t_mainfiber->m_ctx))
+        {
+            BLUE_ASSERT2(false, "swapcontext error");
+        }
     }
 
     void Fiber::swapIn()
@@ -258,7 +287,10 @@ namespace blue
             BLUE_ASSERT2(this, "this not exit");
             SetThis(this);
             m_status.store(Status::EXEC, std::memory_order_release);
-            Context::Swap(*Schedular::GetMainFiber()->m_ctx, *m_ctx);
+            if (swapcontext(&blue::Schedular::GetMainFiber()->m_ctx, &m_ctx))
+            {
+                BLUE_ASSERT2(false, "swapcontext error");
+            }
         }
     }
 
@@ -283,7 +315,10 @@ namespace blue
                     m_status.store(Status::HOLD, std::memory_order_release);
                 }
             }
-            Context::Swap(*m_ctx, *Schedular::GetMainFiber()->m_ctx);
+            if (swapcontext(&m_ctx, &blue::Schedular::GetMainFiber()->m_ctx))
+            {
+                BLUE_ASSERT2(false, "swapcontext error");
+            }
         }
     }
 
