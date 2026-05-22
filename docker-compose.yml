@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: LLd20051014.
+      MYSQL_DATABASE: blue_proxy
+      MYSQL_USER: blue
+      MYSQL_PASSWORD: LLd20051014.
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  proxy:
+    build: .
+    ports:
+      - "8020:8020"
+      - "8443:8443"
+    depends_on:
+      - mysql
+      - redis
+
+volumes:
+  mysql_data:
