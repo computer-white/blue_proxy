@@ -175,6 +175,9 @@ namespace blue
             uint64_t m_createTime;
         };
 
+        // 连接池最大大小
+        extern uint32_t s_httpconnpool_mxsize;
+
         class HttpConnectionPool
         {
         public:
@@ -182,12 +185,26 @@ namespace blue
             using MmutexType = blue::Mmutex;
 
         public:
+            /**
+             * @brief httpconnection pool 构造函数
+             * @param host 目标真实目标主机(实际连接的 IP)
+             * @param vhost 虚拟主机
+             * @param port 目标端口
+             * @param aliveTime 连接最大存活时间
+             * @param maxRequest 最大请求数量
+             * @param maxSize 连接池最大大小 具有默认大小
+             */
             HttpConnectionPool(const std::string &host,
                                const std::string &vhost,
                                uint16_t port,
-                               uint32_t maxSize,
                                uint64_t aliveTime,
-                               uint32_t maxRequest);
+                               uint32_t maxRequest,
+                               uint32_t maxSize = s_httpconnpool_mxsize);
+
+            /**
+             * @brief 获取连接实例指针
+             * @return httpconnectionPtr
+             */
             HttpConnection::HttpConnectionPtr getConnnection();
 
             /**

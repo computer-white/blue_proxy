@@ -47,6 +47,8 @@ namespace blue
                 virtual void handleClient(MSocket::MSocketPtr sock) override;
             private:
 
+                void _handleWebSocket(MSocket::MSocketPtr sock, HttpRequest::HttpRequestPtr request, HttpResponse::HttpResponsePtr response, const std::string &targeturl);
+
                 void _handleAdmin(HttpRequest::HttpRequestPtr request, HttpResponse::HttpResponsePtr response, HttpSession::HttpSessionPtr session);
 
                 void _handleConnect(MSocket::MSocketPtr sock,

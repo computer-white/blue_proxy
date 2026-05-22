@@ -20,127 +20,25 @@ namespace blue
         // 全局连接池缓存
         static std::map<std::string, HttpConnectionPool::HttpConnectionPoolPtr> s_pools;
         static http::HttpConnectionPool::MmutexType s_poolMutex;
-        
-        static blue::ConfigVar<std::string>::ConfigVarPtr g_db_host = 
-                blue::Config::Lookup<std::string>("db.host","localhost","db host");
 
-        static blue::ConfigVar<std::string>::ConfigVarPtr g_db_user = 
-                blue::Config::Lookup<std::string>("db.user","blue","db user");
-        
-        static blue::ConfigVar<std::string>::ConfigVarPtr g_db_passward = 
-                blue::Config::Lookup<std::string>("db.passward","LLd20051014.","db passward");
-        
-        static blue::ConfigVar<std::string>::ConfigVarPtr g_db_database = 
-                blue::Config::Lookup<std::string>("db.database","blue_proxy","db database");
-        
-        static blue::ConfigVar<uint16_t>::ConfigVarPtr g_db_port = 
-                blue::Config::Lookup<uint16_t>("db.port",3306,"db port");
-            
-        static blue::ConfigVar<std::string>::ConfigVarPtr g_redis_host = 
-                blue::Config::Lookup<std::string>("redis.host","127.0.0.1","redis host");
-        
-        static blue::ConfigVar<uint16_t>::ConfigVarPtr g_redis_port = 
-                blue::Config::Lookup<uint16_t>("redis.port",6379,"redis port");
-        
-        static blue::ConfigVar<std::string>::ConfigVarPtr g_redis_passward = 
-                blue::Config::Lookup<std::string>("redis.passward","lld200510","redis passward");
+        extern std::string s_db_host;
+        extern std::string s_db_user;
+        extern std::string s_db_database;
+        extern std::string s_db_passward;
+        extern uint16_t s_db_port;
+        extern blue::DbManager::DbManagerPtr s_dbmanager_ptr;
 
-        static blue::ConfigVar<uint64_t>::ConfigVarPtr g_rate_limit = 
-                blue::Config::Lookup<uint64_t>("redis.rate_limit",100,"redis rate limit");
+        extern std::string s_redis_host;
+        extern uint16_t s_redis_port;
+        extern std::string s_redis_passward;
+        extern blue::RedisManager::RedisManagerPtr s_redismanager_ptr;
 
-        static blue::ConfigVar<uint64_t>::ConfigVarPtr g_rate_limit_expire = 
-                blue::Config::Lookup<uint64_t>("redis.rate_limit_expire",60,"redis rate limit expire");
+        extern uint64_t s_rate_limit;
+        extern uint64_t s_rate_limit_expire;
+        extern uint64_t s_cache_expire;
 
-        static blue::ConfigVar<uint64_t>::ConfigVarPtr g_cache_expire = 
-                blue::Config::Lookup<uint64_t>("redis.cache_expire",60,"redis cache expire");
-        
-        static std::string s_db_host = "";
-        static std::string s_db_user = "";
-        static std::string s_db_database = "";
-        static std::string s_db_passward = "";
-        static uint16_t s_db_port = 3306;
-        static blue::DbManager::DbManagerPtr s_dbmanager_ptr = nullptr;
+        extern uint64_t s_select_timeout;
 
-        static std::string s_redis_host = "";
-        static uint16_t s_redis_port = 6379;
-        static std::string s_redis_passward = "";
-        static blue::RedisManager::RedisManagerPtr s_redismanager_ptr = nullptr;
-
-        static uint64_t s_rate_limit = 0;
-        static uint64_t s_rate_limit_expire = 0;
-        static uint64_t s_cache_expire = 0;
-
-        struct __DbManagerIniter__
-        {
-            __DbManagerIniter__()
-            {
-                // db
-                s_db_host = g_db_host->getValue();
-                s_db_user = g_db_user->getValue();
-                s_db_passward = g_db_passward->getValue();
-                s_db_database = g_db_database->getValue();
-                s_db_port = g_db_port->getValue();
-                s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
-
-                g_db_host->addListener([](const std::string &old_val, const std::string &new_val){
-                    s_db_host = new_val;
-                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
-                });
-                g_db_user->addListener([](const std::string &old_val, const std::string &new_val){
-                    s_db_user= new_val;
-                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
-                });
-                g_db_passward->addListener([](const std::string &old_val, const std::string &new_val){
-                    s_db_passward= new_val;
-                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
-                });
-                g_db_database->addListener([](const std::string &old_val, const std::string &new_val){
-                    s_db_database = new_val;
-                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
-                });
-                g_db_port->addListener([](const uint16_t &old_val, const uint16_t &new_val){
-                    s_db_port = new_val;
-                    s_dbmanager_ptr = blue::DbManager::Create(s_db_host,s_db_user,s_db_passward,s_db_database,s_db_port);
-                });
-
-                // redis
-                s_redis_host = g_redis_host->getValue();
-                s_redis_passward = g_redis_passward->getValue();
-                s_redis_port = g_redis_port->getValue();
-                s_redismanager_ptr = blue::RedisManager::Create(s_redis_host,s_redis_port,s_redis_passward);
-
-                g_redis_host->addListener([](const std::string &old_val, const std::string &new_val){
-                    s_redis_host = new_val;
-                    s_redismanager_ptr = blue::RedisManager::Create(s_redis_host,s_redis_port,s_redis_passward);
-                });
-                g_redis_passward->addListener([](const std::string &old_val, const std::string &new_val){
-                    s_redis_passward = new_val;
-                    s_redismanager_ptr = blue::RedisManager::Create(s_redis_host,s_redis_port,s_redis_passward);
-                });
-                g_redis_port->addListener([](const uint16_t &old_val, const uint16_t &new_val){
-                    s_redis_port = new_val;
-                    s_redismanager_ptr = blue::RedisManager::Create(s_redis_host,s_redis_port,s_redis_passward);
-                });
-
-                s_rate_limit = g_rate_limit->getValue();
-                s_rate_limit_expire = g_rate_limit_expire->getValue();
-                s_cache_expire = g_cache_expire->getValue();
-                g_rate_limit->addListener([](const uint64_t &old_val, const uint64_t &new_val){
-                    s_rate_limit = new_val;
-                });
-                g_cache_expire->addListener([](const uint64_t &old_val, const uint64_t &new_val){
-                    s_cache_expire = new_val;
-                });
-                g_rate_limit_expire->addListener([](const uint64_t &old_val, const uint64_t &new_val){
-                    s_rate_limit_expire = new_val;
-                });
-
-            }
-        };
-        
-        static __DbManagerIniter__ __S_DbManager_Initer__;
-        // static std::map<std::string, HttpConnectionPool::HttpConnectionPoolPtr> s_poolCache;
-        // static Mmutex s_poolMutex;  
         /*
             // 需要处理的标签和属性
             struct ResourceRewrite {
@@ -568,7 +466,6 @@ namespace blue
                 GumboElement *element = &node->v.element;
                 const char *tag_name = gumbo_normalized_tagname(element->tag);
 
-                // ✅ 跳过 CSP 相关的 <meta> 标签
                 if (element->tag == GUMBO_TAG_META)
                 {
                     GumboAttribute* http_equiv = gumbo_get_attribute(&element->attributes, "http-equiv");
@@ -588,7 +485,6 @@ namespace blue
                     ss << ">";
                     ss << "<base href=\"" << proxy_path << "/" << target << "\">";
                     
-                    // ✅ 注入 JS 拦截器
                     auto target_url = blue::Url::CreateUrl(target);
                     if (target_url)
                     {
@@ -770,7 +666,32 @@ namespace blue
                     return;  // CONNECT
                 }
 
-                if (!target_param.empty())
+                if (path == "/proxy.pac")
+                {
+                    // FindProxyForURL 浏览器每次请求调用
+                    std::string pac = R"(function FindProxyForURL(url, host) {
+                        // 本地地址直连,isPlainHostName判断是否是本机主机名
+                        if (isPlainHostName(host) || host == "127.0.0.1" || host == "localhost")
+                            return "DIRECT";
+                        // 百度相关走代理
+                        if (shExpMatch(host, "*.baidu.com") || shExpMatch(host, "*.bdstatic.com"))
+                            return "PROXY localhost:8020";
+                        // websocket
+                        if (url.startsWith("ws://") || url.startsWith("wss://"))
+                            return "PROXY localhost:8020";
+                        // 其他直连
+                        return "DIRECT";
+                    })";
+                    responsePtr->setBody(pac);
+                    responsePtr->setHeader("Content-Type","application/x-ns-proxy-autoconfig");
+                    responsePtr->setHeader("Content-Length",std::to_string(pac.size()));
+                    responsePtr->setStatus(HttpStatus::OK);
+                }
+                else if (path.find("/admin/") == 0 || path == "/admin")
+                {
+                    _handleAdmin(requestPtr, responsePtr, session);
+                }
+                else if (!target_param.empty())
                 {
                     targeturl = target_param;
                     // 整个path带有/blue...
@@ -799,7 +720,26 @@ namespace blue
                         host.find("localhost") == std::string::npos && 
                         host.find("127.0.0.1") == std::string::npos)
                 {
-                   if (path.find("http://") == 0 || path.find("https://") == 0)
+                    // websocket
+                    std::string upgrade = requestPtr->getHeader("Upgrade");
+                    if (strcasecmp(upgrade.c_str(), "websocket") == 0)
+                    {
+                        BLUE_LOG_INFO(g_logger) << "WebSocket upgrade: " << requestPtr->getPath();
+                        if (path.find("http://") == 0 || path.find("https://") == 0)
+                        {
+                            targeturl = path;
+                        }
+                        else
+                        {
+                            targeturl = "http://" + host + path;
+                            std::string query = requestPtr->getQuery();
+                            if (!query.empty()) targeturl += "?" + query;
+                        }
+                        _handleWebSocket(sock, requestPtr, responsePtr, targeturl);
+                        return;
+                    }
+                    // 正常正向代理
+                    if (path.find("http://") == 0 || path.find("https://") == 0)
                     {
                         targeturl = path;
                     }
@@ -853,10 +793,6 @@ namespace blue
                     {
                         m_dispatch->handle(requestPtr, responsePtr, session);
                     }
-                }
-                else if (path.find("/admin/") == 0 || path == "/admin")
-                {
-                    _handleAdmin(requestPtr, responsePtr, session);
                 }
                 else
                 {
@@ -989,7 +925,7 @@ namespace blue
                 if (it == s_pools.end())
                 {
                     pool = std::make_shared<HttpConnectionPool>(
-                        UrlPtr->getHost(), "", UrlPtr->getPort(), 10, 60000, 100);
+                        UrlPtr->getHost(), "", UrlPtr->getPort(), 60000, 100, 10);
                     s_pools[poolKey] = pool;
                 }
                 else
@@ -1147,11 +1083,42 @@ namespace blue
             if (sub_path.empty() || sub_path == "/")
                 sub_path = "/index";
             std::string body;
-            
-            if (sub_path == "/index")
+            if (sub_path == "/api/stats")
+            {
+                body = "{\"labels\":[],\"values\":[]}";
+                if (s_dbmanager_ptr)
+                {
+                    auto res = s_dbmanager_ptr->query(
+                        "SELECT DATE_FORMAT(created_at,'%H:%i') as minute, COUNT(*) as cnt "
+                        "FROM request_logs WHERE created_at > DATE_SUB(NOW(), INTERVAL 60 MINUTE) "
+                        "GROUP BY minute ORDER BY minute");
+                    if (res)
+                    {
+                        std::string labels = "[", values = "[";
+                        MYSQL_ROW row;
+                        bool first = true;
+                        while ((row = mysql_fetch_row(res)))
+                        {
+                            if (!first) { labels += ","; values += ","; }
+                            labels += "\"" + std::string(row[0]) + "\"";
+                            values += std::string(row[1]);
+                            first = false;
+                        }
+                        labels += "]"; values += "]";
+                        body = "{\"labels\":" + labels + ",\"values\":" + values + "}";
+                        mysql_free_result(res);
+                    }
+                }
+                response->setBody(body);
+                response->setHeader("Content-Type", "application/json");
+                response->setHeader("Content-Length", std::to_string(body.size()));
+                response->setStatus(blue::http::HttpStatus::OK);
+                return;
+            }
+            else if (sub_path == "/index")
             {
                 body = R"(<!DOCTYPE html>
-                    <html><head><meta charset="UTF-8"><title>Blue Proxy</title>
+                    <html><head><meta charset="UTF-8" http-equiv="refresh" content="5">><title>Blue Proxy</title>
                     <style>
                     *{margin:0;padding:0;box-sizing:border-box}
                     body{font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px}
@@ -1178,7 +1145,40 @@ namespace blue
                     <a href="/admin/config">Config</a>
                     </div>
                     <div class="card">
-                    <h2>Server Info</h2>
+                    <h2>Server Info
+                    <div class="card">
+                    <h2>📊 Requests Per Minute</h2>
+                    <canvas id="chart" width="800" height="300"></canvas>
+                    </div>
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+                    <script>
+                    fetch('/admin/api/stats')
+                    .then(r => r.json())
+                    .then(data => {
+                        new Chart(document.getElementById('chart'), {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                            label: 'Requests/min',
+                            data: data.values,
+                            borderColor: '#1677ff',
+                            backgroundColor: 'rgba(22,119,255,0.1)',
+                            tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { labels: { color: '#e0e0e0' } } },
+                            scales: {
+                            x: { ticks: { color: '#888' }, grid: { color: '#333' } },
+                            y: { ticks: { color: '#888' }, grid: { color: '#333' }, beginAtZero: true }
+                            }
+                        }
+                        });
+                    });
+                    </script>
+                    </h2>
                     <div class="stat"><div class="val">)" + std::to_string(blue::Fiber::TotalFibers()) + R"(</div><div class="label">Fibers</div></div>
                     <div class="stat"><div class="val">)" + std::to_string(s_pools.size()) + R"(</div><div class="label">Connection Pools</div></div>
                     </div>
@@ -1186,10 +1186,40 @@ namespace blue
             }
             else if (sub_path == "/logs")
             {
-                body = "<html><head><meta charset='UTF-8'><title>Logs</title></head><body><h1>Request Logs</h1>";
+                std::string search = request->getParam("search", "");
+                body = R"(<html><head><meta charset='UTF-8'><title>Logs</title>
+            <style>body{font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px}
+            h1{color:#1677ff}.card{background:#16213e;border-radius:8px;padding:20px;margin:20px 0}
+            table{width:100%;border-collapse:collapse;margin-top:10px}
+            th{text-align:left;padding:8px;border-bottom:2px solid #e94560;color:#e94560}
+            td{padding:8px;border-bottom:1px solid #333;font-size:13px;max-width:400px;overflow:hidden}
+            tr:hover{background:#0f3460}
+            a{color:#1677ff;text-decoration:none}
+            input{padding:8px;border:1px solid #333;background:#1a1a2e;color:#e0e0e0;border-radius:4px;width:300px}
+            button{padding:8px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;cursor:pointer}
+            </style></head><body>
+            <h1>📋 Request Logs</h1>
+            <a href='/admin/index'>← Back</a>
+            <form style='margin:20px 0'>
+            <input name='search' value=')" + search + R"(' placeholder='Search by URL or IP...'>
+            <button type='submit'>Search</button>
+            </form>)";
+
                 if (s_dbmanager_ptr)
                 {
-                    auto res = s_dbmanager_ptr->query("SELECT id,client_ip,target_url,status_code,duration_ms,created_at FROM request_logs ORDER BY id DESC LIMIT 50");
+                    int page = atoi(request->getParam("page", "1").c_str());
+                    if (page < 1) page = 1;
+                    int limit = 20;
+                    int offset = (page - 1) * limit;
+                    std::string sql = "SELECT id,client_ip,target_url,status_code,duration_ms,created_at FROM request_logs ";
+                    if (!search.empty())
+                    {
+                        sql += "WHERE target_url LIKE '%" + s_dbmanager_ptr->escape(search) 
+                            + "%' OR client_ip LIKE '%" + s_dbmanager_ptr->escape(search) + "%' ";
+                    }
+                    sql += "ORDER BY id DESC LIMIT " + std::to_string(limit) + " OFFSET " + std::to_string(offset);
+                    
+                    auto res = s_dbmanager_ptr->query(sql);
                     if (res)
                     {
                         body += "<table><tr><th>ID</th><th>IP</th><th>Target</th><th>Status</th><th>Time</th><th>Date</th></tr>";
@@ -1206,6 +1236,11 @@ namespace blue
                         body += "</table>";
                         mysql_free_result(res);
                     }
+                    body += "<div style='margin-top:20px'>";
+                    body += "<a href='/admin/logs?page=" + std::to_string(page > 1 ? page - 1 : 1) + "'>← Prev</a> ";
+                    body += " Page " + std::to_string(page) + " ";
+                    body += "<a href='/admin/logs?page=" + std::to_string(page + 1) + "'>Next →</a>";
+                    body += "</div>";
                 }
                 body += "</body></html>";
             }
@@ -1235,11 +1270,11 @@ namespace blue
                         td{padding:8px;border-bottom:1px solid #333}a{color:#1677ff}</style></head><body>
                         <h1>⚙️ Configuration</h1><a href='/admin/index'>← Back</a><div class='card'><table>
                         <tr><th>Key</th><th>Value</th><th>Description</th></tr>
-                        <tr><td>proxy.rate_limit</td><td>)" + std::to_string(g_rate_limit->getValue()) + R"(</td><td>Rate limit per minute</td></tr>
-                        <tr><td>proxy.cache_ttl</td><td>)" + std::to_string(g_cache_expire->getValue()) + R"(</td><td>Cache TTL (seconds)</td></tr>
-                        <tr><td>db.host</td><td>)" + g_db_host->getValue() + R"(</td><td>Database host</td></tr>
-                        <tr><td>db.database</td><td>)" + g_db_database->getValue() + R"(</td><td>Database name</td></tr>
-                        <tr><td>redis.host</td><td>)" + g_redis_host->getValue() + R"(</td><td>Redis host</td></tr>
+                        <tr><td>proxy.rate_limit</td><td>)" + std::to_string(s_rate_limit) + R"(</td><td>Rate limit per minute</td></tr>
+                        <tr><td>proxy.cache_ttl</td><td>)" + std::to_string(s_cache_expire) + R"(</td><td>Cache TTL (seconds)</td></tr>
+                        <tr><td>db.host</td><td>)" + s_db_host + R"(</td><td>Database host</td></tr>
+                        <tr><td>db.database</td><td>)" + s_db_database+ R"(</td><td>Database name</td></tr>
+                        <tr><td>redis.host</td><td>)" + s_redis_host + R"(</td><td>Redis host</td></tr>
                         </table></div></body></html>)";
             
             }
@@ -1300,7 +1335,7 @@ namespace blue
                 FD_SET(remote_fd, &fds);
                 
                 int max_fd = std::max(client_fd, remote_fd);
-                struct timeval tv = {0, 100000};
+                struct timeval tv = {0, (long)s_select_timeout * 1000};
                 
                 int ret = select(max_fd + 1, &fds, nullptr, nullptr, &tv);
                 if (ret < 0)
@@ -1351,6 +1386,58 @@ namespace blue
             
             remote_sock->close();
             BLUE_LOG_INFO(g_logger) << "CONNECT tunnel closed";
+        }
+
+        template <typename T>
+        void HttpServer<T>::_handleWebSocket(MSocket::MSocketPtr sock, 
+                            HttpRequest::HttpRequestPtr request, 
+                            HttpResponse::HttpResponsePtr response, 
+                            const std::string &targeturl)
+        {
+            // 1. 连接目标站
+            auto url = blue::Url::CreateUrl(targeturl);
+            auto addr = url->createAddress();
+            auto remote = blue::MSocket::CreateTcp(addr);
+            if (!remote->connect(addr)) return;
+
+            // 2. 转发升级请求到目标站
+            std::string req_str = request->toString();
+            remote->send(req_str.c_str(), req_str.size());
+
+            // 3. 读取目标站的 101 响应
+            char buf[4096];
+            ssize_t n = remote->recv(buf, sizeof(buf), 0);
+            
+            // 4. 透传 101 给浏览器
+            ::send(sock->getSocketfd(), buf, n, 0);
+
+            // 5. 双向透传 WebSocket 帧（和 CONNECT 隧道一样）
+            int client_fd = sock->getSocketfd();
+            int remote_fd = remote->getSocketfd();
+
+            fd_set fds;
+            while (true) {
+                FD_ZERO(&fds);
+                FD_SET(client_fd, &fds);
+                FD_SET(remote_fd, &fds);
+                struct timeval tv = {0, (long)(s_select_timeout * 1000)};
+                int ret = select(std::max(client_fd, remote_fd) + 1, &fds, nullptr, nullptr, &tv);
+                if (ret > 0) {
+                    if (FD_ISSET(client_fd, &fds)) {
+                        n = ::recv(client_fd, buf, sizeof(buf), 0);
+                        if (n <= 0) break;
+                        ::send(remote_fd, buf, n, 0);
+                    }
+                    if (FD_ISSET(remote_fd, &fds)) {
+                        n = ::recv(remote_fd, buf, sizeof(buf), 0);
+                        if (n <= 0) break;
+                        ::send(client_fd, buf, n, 0);
+                    }
+                } else if (ret == 0) {
+                    blue::Fiber::YieldToHold();
+                } else break;
+            }
+            remote->close();
         }
 
 

@@ -307,8 +307,8 @@ namespace blue
         }
 
         HttpConnectionPool::HttpConnectionPool(const std::string &host, const std::string &vhost,
-                                               uint16_t port, uint32_t maxSize,
-                                               uint64_t aliveTime, uint32_t maxRequest)
+                                               uint16_t port, uint64_t aliveTime, 
+                                               uint32_t maxRequest, uint32_t maxSize)
             : m_host(host), m_vhost(vhost),
               m_maxAliveTime(aliveTime), m_maxSize(maxSize),
               m_maxRequest(maxRequest), m_port(port)

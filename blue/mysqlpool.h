@@ -52,6 +52,9 @@ namespace blue
         MYSQL *m_mysql;
     };
 
+    // 连接池最大大小
+    extern size_t s_mysqlpool_mxsize;
+
     /**
      * @brief MySQL 连接池，管理连接的分配与回收
      */
@@ -73,7 +76,7 @@ namespace blue
          */
         static MySQLPoolPtr Create(const std::string& host, const std::string& user,
                         const std::string& password, const std::string& database,
-                        uint16_t port = 3306, size_t pool_size = 8);
+                        uint16_t port = 3306, size_t pool_size = s_mysqlpool_mxsize);
         
         /**
          * @brief 获取一个数据库连接（阻塞等待）
