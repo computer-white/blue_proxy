@@ -48,4 +48,4 @@ thirdparty/
 
 # core dumps
 core
-core.*
+core.*build/system.txt
