@@ -32,6 +32,8 @@ Makefile
 # llhttp相关
 thirdparty/
 
+# 代码行数相关
+.VSCodeCounter
 
 # IDE 相关
 /.vscode/*.json

@@ -22,6 +22,12 @@ services:
     ports:
       - "8020:8020"
       - "8443:8443"
+    dns:
+      - 114.114.114.114
+      - 223.5.5.5
+    volumes:
+      - ./bin:/app/bin
+      - ./certs:/app/certs
     depends_on:
       - mysql
       - redis

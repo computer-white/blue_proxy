@@ -45,9 +45,9 @@ namespace blue
         static blue::ConfigVar<uint64_t>::ConfigVarPtr g_cache_expire = 
                 blue::Config::Lookup<uint64_t>("redis.cache_expire",60,"redis cache expire");
         
-        // select超时设置(配置里面是s)
+        // select超时设置(配置里面是ms)
         static blue::ConfigVar<uint64_t>::ConfigVarPtr g_select_timeout = 
-                blue::Config::Lookup<uint64_t>("select.timeout",50,"select timeout");
+                blue::Config::Lookup<uint64_t>("select.timeout",1000,"select timeout");
         
         // httpconnectionpool size
         static blue::ConfigVar<uint32_t>::ConfigVarPtr g_httpconnpool_mxsize = 

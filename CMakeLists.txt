@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 project(blue)
 
 
@@ -20,29 +20,78 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 错误检测
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+# set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
+
 # ===== 重点：输出目录设置必须在创建目标之前 =====
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)  # 动态库
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)  # 静态库
 
-include_directories(${PROJECT_SOURCE_DIR}/thirdparty/llhttp-release-v9.2.0/include)
+
 
 # 打印确认（调试用）
 message(STATUS "可执行文件输出目录: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message(STATUS "动态库输出目录: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 message(STATUS "静态库输出目录: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
 
+# 查找需要的外部库(yaml.cpp, pthread, hiredis)
 find_library(YAML_CPP yaml-cpp PATHS /usr/lib/x86_64-linux-gnu)
-find_library(PTHRED pthread PTHRED)
-# 添加yaml-cpp所在文件目录
-# link_directories(/usr/lib/x86_64-linux-gnu)
+find_library(PTHREAD_LIB pthread)
+find_library(HIREDIS_LIB hiredis)
+
+# 查找 Boost
+find_package(Boost REQUIRED COMPONENTS iostreams coroutine context)
+# gzip 需要 zlib 底层支持
+find_package(ZLIB REQUIRED)
 
 # 头文件
 include_directories(/usr/include) # yaml-cpp头文件
 include_directories(.)
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/llhttp-release-v9.2.0/include)  # llhttp头文件
 
-# llhttp 源文件（稍后会添加到库中）
+# 查找外部包
+find_package(PkgConfig)
+if(PKG_CONFIG_FOUND)
+    pkg_check_modules(LIBIDN2 libidn2)
+    pkg_check_modules(GUMBO REQUIRED gumbo)
+    if(LIBIDN2_FOUND)
+        add_definitions(-DHAVE_LIBIDN2)
+        message(STATUS "Found libidn2, IDN support enabled")
+    else()
+        message(STATUS "libidn2 not found, IDN support disabled")
+    endif()
+
+    if(GUMBO_FOUND)
+        message(STATUS "Found Gumbo parser: ${GUMBO_INCLUDE_DIRS}")
+        include_directories(${GUMBO_INCLUDE_DIRS})
+    endif()
+endif()
+
+# 查找OpenSSL
+find_package(OpenSSL REQUIRED)
+
+
+# 查找 ragel 工具
+find_program(RAGEL_EXECUTABLE ragel)
+if(NOT RAGEL_EXECUTABLE)
+    message(FATAL_ERROR "ragel not found, please install: sudo apt install ragel")
+endif()
+
+# 设置 .rl 文件和输出文件路径
+set(RAGEL_INPUT  ${CMAKE_SOURCE_DIR}/blue/url_parser.rl)
+set(RAGEL_OUTPUT ${CMAKE_SOURCE_DIR}/blue/urlparser.cpp)
+
+# 自定义命令：.rl → .cpp
+add_custom_command(
+    OUTPUT ${RAGEL_OUTPUT}
+    COMMAND ${RAGEL_EXECUTABLE} -G2 -o ${RAGEL_OUTPUT} ${RAGEL_INPUT}
+    DEPENDS ${RAGEL_INPUT}
+    COMMENT "Generating URL parser from Ragel: ${RAGEL_INPUT}"
+)
+
+# llhttp 源文件
 set(LLHTTP_SRC
     ${PROJECT_SOURCE_DIR}/thirdparty/llhttp-release-v9.2.0/src/llhttp.c
     ${PROJECT_SOURCE_DIR}/thirdparty/llhttp-release-v9.2.0/src/api.c
@@ -54,6 +103,9 @@ set(LIB_SRC
     blue/address.cpp
     blue/bytearray.cpp
     blue/config.cpp
+    blue/configinit.cpp
+    blue/context.cpp
+    blue/dbmanager.cpp
     blue/fdmanager.cpp
     blue/fiber.cpp
     blue/hook.cpp
@@ -63,11 +115,17 @@ set(LIB_SRC
     blue/msocketstream.cpp
     blue/mstream.cpp
     blue/mthread.cpp
+    blue/mysqlpool.cpp
+    blue/redismanager.cpp
     blue/schedular.cpp
+    blue/sslsocket.cpp
     blue/tcpServer.cpp
     blue/timer.cpp
+    blue/url.cpp
+    blue/urlparser.cpp
     blue/util.cpp
     http/http.cpp
+    http/httpconnection.cpp
     http/httpParser.cpp
     http/httpserver.cpp
     http/httpservlet.cpp
@@ -85,22 +143,30 @@ macro(check_blue_file file_name)
     endif()
 endmacro()
 
-check_blue_file(log)
-check_blue_file(util)
 check_blue_file(address)
 check_blue_file(bytearray)
 check_blue_file(config)
+check_blue_file(configinit)
+check_blue_file(context)
+check_blue_file(dbmanager)
 check_blue_file(fdmanager)
 check_blue_file(fiber)
 check_blue_file(hook)
 check_blue_file(iomanager)
+check_blue_file(log)
 check_blue_file(msocket)
-check_blue_file(mthread)
-check_blue_file(schedular)
-check_blue_file(timer)
-check_blue_file(tcpServer)
-check_blue_file(mstream)
 check_blue_file(msocketstream)
+check_blue_file(mstream)
+check_blue_file(mthread)
+check_blue_file(mysqlpool)
+check_blue_file(redismanager)
+check_blue_file(schedular)
+check_blue_file(sslsocket)
+check_blue_file(tcpServer)
+check_blue_file(timer)
+check_blue_file(url)
+check_blue_file(urlparser)
+check_blue_file(util)
 
 # 检查http源文件是否存在
 macro(check_http_file file_name)
@@ -110,6 +176,7 @@ macro(check_http_file file_name)
 endmacro()
 
 check_http_file(http)
+check_http_file(httpconnection)
 check_http_file(httpParser)
 check_http_file(httpserver)
 check_http_file(httpservlet)
@@ -126,22 +193,105 @@ set_target_properties(blue_static PROPERTIES
     OUTPUT_NAME "blue"  # 生成 libsylar.a
 )
 
+# 查找mysql路径
+find_path(MYSQL_INCLUDE_DIR
+    NAMES mysql.h
+    PATHS /usr/include/mysql
+)
+
+# 查找mysql库
+find_library(MYSQL_CLIENT_LIB
+    NAMES mysqlclient
+    PATHS /usr/lib/x86_64-linux-gnu
+)
+
+if(MYSQL_INCLUDE_DIR AND MYSQL_CLIENT_LIB)
+    target_include_directories(blue PRIVATE ${MYSQL_INCLUDE_DIR})
+    target_include_directories(blue_static PRIVATE ${MYSQL_INCLUDE_DIR})
+    target_link_libraries(blue PRIVATE ${MYSQL_CLIENT_LIB})
+    target_link_libraries(blue_static PRIVATE ${MYSQL_CLIENT_LIB})
+    
+    set(MYSQL_FOUND TRUE)
+    set(MYSQL_LIB ${MYSQL_CLIENT_LIB})
+
+    message(STATUS "✓ MySQL found: ${MYSQL_INCLUDE_DIR} -> ${MYSQL_CLIENT_LIB}")
+else()
+    set(MYSQL_FOUND FALSE)
+    message(WARNING "⚠ MySQL not found")
+endif()
+
+# 链接boost,OpenSSL
+target_link_libraries(blue PRIVATE
+    ${OPENSSL_LIBRARIES}
+    Boost::iostreams
+    Boost::coroutine
+    Boost::context
+    ZLIB::ZLIB
+)
+target_link_libraries(blue_static PRIVATE
+    ${OPENSSL_LIBRARIES}
+    Boost::iostreams
+    Boost::coroutine
+    Boost::context
+    ZLIB::ZLIB
+)
+
+# 链接 IDN 库（如果找到）
+if(LIBIDN2_FOUND)
+    target_include_directories(blue PRIVATE ${LIBIDN2_INCLUDE_DIRS})
+    target_link_libraries(blue PRIVATE ${LIBIDN2_LIBRARIES})
+    
+    target_include_directories(blue_static PRIVATE ${LIBIDN2_INCLUDE_DIRS})
+    target_link_libraries(blue_static PRIVATE ${LIBIDN2_LIBRARIES})
+endif()
+
+# 链接 GUMBO
+if(GUMBO_FOUND)
+    target_include_directories(blue PRIVATE ${GUMBO_INCLUDE_DIRS})
+    target_link_libraries(blue PRIVATE ${GUMBO_LIBRARIES})
+    target_include_directories(blue_static PRIVATE ${GUMBO_INCLUDE_DIRS})
+    target_link_libraries(blue_static PRIVATE ${GUMBO_LIBRARIES})
+endif()
+
+set(LINK_LIBS blue ${YAML_CPP} ${PTHREAD_LIB} ${HIREDIS_LIB})
+
+list(APPEND LINK_LIBS 
+    ${OPENSSL_LIBRARIES}
+    Boost::iostreams
+    Boost::coroutine
+    Boost::context
+    ZLIB::ZLIB)
+
+# 链接mysql
+if (MYSQL_FOUND)
+    list(APPEND LINK_LIBS ${MYSQL_LIB})
+endif()
+
+# 链接 IDN
+if(LIBIDN2_FOUND)
+    list(APPEND LINK_LIBS ${LIBIDN2_LIBRARIES})
+endif()
+
+# 链接 GUMBO
+if(GUMBO_FOUND)
+    list(APPEND LINK_LIBS ${GUMBO_LIBRARIES})
+endif()
+
 # ========== 创建测试可执行文件 ==========
-# 为了简洁，定义一个宏来简化重复代码
 macro(add_blue_test test_name)
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/${test_name}.cpp)
         add_executable(${test_name} tests/${test_name}.cpp)
-        target_link_libraries(${test_name} PRIVATE blue ${YAML_CPP} ${PTHREAD})
+        target_link_libraries(${test_name} PRIVATE ${LINK_LIBS})
         message(STATUS "测试程序 ${test_name} 已添加")
     else()
-        # ** 修正点 3：警告信息使用了正确的文件名 **
         message(WARNING "tests/${test_name}.cpp 不存在，跳过测试程序")
     endif()
 endmacro()
 
-# 使用宏添加所有测试，清晰又不会写错文件名
+
 add_blue_test(test)
 add_blue_test(test_config)
+add_blue_test(test_compress)
 add_blue_test(test_thread)
 add_blue_test(test_util)
 add_blue_test(test_fiber)
@@ -151,21 +301,33 @@ add_blue_test(test_hook)
 add_blue_test(test_address)
 add_blue_test(test_interface)
 add_blue_test(test_ipv4)
+add_blue_test(test_proxy)
+add_blue_test(test_proxy_full)
 add_blue_test(test_socket)
 add_blue_test(test_bytearray)
+add_blue_test(test_bytearrayBuffer)
 add_blue_test(test_http)
+add_blue_test(test_httpconnection)
 add_blue_test(test_httpParser)
 add_blue_test(test_tcpServer)
 add_blue_test(test_httpserver)
+add_blue_test(test_url)
+add_blue_test(test_http_pool_stress)
+add_blue_test(test_http_stress)
+add_blue_test(test_http_final)
+add_blue_test(test_boostfiber)
+add_blue_test(test_dnmbo)
+add_blue_test(test_redis)
+add_blue_test(test_benchmark)
 
-# 为了简洁，定义一个宏来简化重复代码
+
+
 macro(add_blue_example test_name)
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/examples/${test_name}.cpp)
         add_executable(${test_name} examples/${test_name}.cpp)
-        target_link_libraries(${test_name} PRIVATE blue ${YAML_CPP} ${PTHREAD})
+        target_link_libraries(${test_name} PRIVATE ${LINK_LIBS})
         message(STATUS "测试程序 ${test_name} 已添加")
     else()
-        # ** 修正点 3：警告信息使用了正确的文件名 **
         message(WARNING "tests/${test_name}.cpp 不存在，跳过测试程序")
     endif()
 endmacro()
