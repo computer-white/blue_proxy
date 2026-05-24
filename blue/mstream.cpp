@@ -1,5 +1,7 @@
 #include "mstream.h"
 #include "blue/log.h"
+
+// mstream
 namespace blue
 {
     static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");

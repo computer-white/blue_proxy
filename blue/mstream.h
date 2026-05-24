@@ -3,6 +3,7 @@
 #include <memory>
 #include "bytearray.h"
 
+// mstream
 namespace blue
 {
     /* 流式处理的基类 */
