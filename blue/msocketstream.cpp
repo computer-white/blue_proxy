@@ -1,5 +1,6 @@
 #include "msocketstream.h"
 
+// socket stream
 namespace blue
 {
     SocketStream::SocketStream(MSocket::MSocketPtr sock, bool owner)

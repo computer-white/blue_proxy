@@ -3,6 +3,7 @@
 #include "msocket.h"
 #include "mstream.h"
 
+// socket stream
 namespace blue
 {
     class SocketStream : public MStream
