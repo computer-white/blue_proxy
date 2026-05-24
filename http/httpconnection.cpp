@@ -3,6 +3,7 @@
 #include <string>
 #include <fcntl.h>
 
+// http connnection
 namespace blue
 {
     namespace http

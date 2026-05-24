@@ -8,6 +8,7 @@
 #include "http.h"
 #include "httpParser.h"
 
+// http connnection
 namespace blue
 {
     namespace http
