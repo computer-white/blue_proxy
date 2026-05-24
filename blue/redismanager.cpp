@@ -1,6 +1,7 @@
 #include "redismanager.h"
 #include "log.h"
 
+// redis 管理
 namespace blue
 {
     static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");

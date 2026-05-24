@@ -5,6 +5,7 @@
 #include <string>
 #include "mthread.h"
 
+// redis 管理
 namespace blue
 {
     /**
