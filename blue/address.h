@@ -10,6 +10,7 @@
 #include <map>
 #include <vector>
 
+// ip地址解析
 namespace blue
 {
 	class IPAddress;
