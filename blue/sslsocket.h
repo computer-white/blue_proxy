@@ -6,6 +6,7 @@
 #include "msocket.h"
 #include "msocketstream.h"
 
+// ssl socket
 namespace blue
 {
     class SSLSocket : public SocketStream

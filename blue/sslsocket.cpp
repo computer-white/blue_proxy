@@ -1,6 +1,7 @@
 #include "sslsocket.h"
 #include "log.h"
 
+// ssl socket
 namespace blue
 {
     static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
