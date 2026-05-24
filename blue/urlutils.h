@@ -11,6 +11,7 @@
 #include <idn2.h>
 #endif
 
+// url解码和编码
 namespace blue
 {
     /* 支持unicode 和 ascii 互相转化*/
