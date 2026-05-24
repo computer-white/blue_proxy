@@ -4,6 +4,7 @@
 #include "redismanager.h"
 #include <string>
 
+// 数据库和redis配置
 namespace blue
 {
     namespace http

@@ -5,6 +5,7 @@
 #include "dbmanager.h"
 #include "mysqlpool.h"
 
+// 数据库和redis配置
 namespace blue
 {
     namespace http
