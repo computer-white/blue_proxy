@@ -4,6 +4,7 @@
 #include "schedular.h"
 #include "timer.h"
 
+// io调度
 namespace blue
 {
     class IOManager : public Schedular, public TimerManager
