@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <type_traits>
 
+// 自定义主机字节与自定义字节转化
 namespace blue
 {
 #if __cplusplus >= 202002L
