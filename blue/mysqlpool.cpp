@@ -1,6 +1,7 @@
 #include "mysqlpool.h"
 #include "log.h"
 
+// mysql 连接池
 namespace blue
 {
     static Logger::LoggerPtr g_logger = BLUE_LOG_NAME("mysqlpool");
