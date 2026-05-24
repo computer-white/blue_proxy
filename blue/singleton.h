@@ -2,7 +2,7 @@
 #define BLUE_SINGLETON_H
 #include <memory>
 
-// 单例模式
+// 单例模式模块
 namespace blue
 {
     /*
