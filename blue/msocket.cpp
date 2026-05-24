@@ -7,6 +7,8 @@
 #include "msocket.h"
 
 static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
+
+// socket 模块
 namespace blue
 {
 
