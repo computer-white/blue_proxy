@@ -2,6 +2,7 @@
 #include "httpsession.h"
 #include <string>
 
+// session
 namespace blue
 {
     namespace http
