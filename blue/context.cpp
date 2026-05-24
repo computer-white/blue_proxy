@@ -2,6 +2,7 @@
 #include "macro.h"
 #include <ucontext.h>
 
+// 上下文切换
 namespace blue
 {
     static thread_local Context *t_current = nullptr;
