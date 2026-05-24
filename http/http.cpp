@@ -4,6 +4,8 @@
 #include "blue/log.h"
 
 static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
+
+// http 模块
 namespace blue
 {
     namespace http
