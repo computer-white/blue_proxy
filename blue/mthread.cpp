@@ -7,6 +7,7 @@
 #include <pthread.h>
 #endif
 
+// 线程模块
 namespace blue
 {
     static thread_local Mthread *t_thread = nullptr;
