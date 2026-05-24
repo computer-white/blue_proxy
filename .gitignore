@@ -51,3 +51,20 @@ thirdparty/
 # core dumps
 core
 core.*build/system.txt
+
+# SSL Certificates and Keys (NEVER COMMIT)
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.p8
+*.der
+*.csr
+*.jks
+*.keystore
+*.truststore
+certs/
+ssl/
+secrets/
+keys/
