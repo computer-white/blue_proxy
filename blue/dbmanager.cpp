@@ -1,5 +1,6 @@
 #include "dbmanager.h"
 
+// 数据库管理
 namespace blue
 {
     Logger::LoggerPtr DbManager::s_logger = BLUE_LOG_NAME("system");
