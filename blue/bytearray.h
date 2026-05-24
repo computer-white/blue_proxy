@@ -7,6 +7,7 @@
 #include <sys/uio.h>
 #include <vector>
 
+// 字节流输出
 namespace blue
 {
     class ByteArray

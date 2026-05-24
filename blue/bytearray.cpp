@@ -8,6 +8,7 @@
 #include "mendian.h"
 
 static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
+// 字节流输出
 namespace blue
 {
     ByteArray::Node::Node(size_t s)
