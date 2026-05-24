@@ -5,6 +5,7 @@
 #include "mthread.h"
 #include "singleton.h"
 
+// 文件描述符fd管理
 namespace blue
 {
     class FdCxt : std::enable_shared_from_this<FdCxt>

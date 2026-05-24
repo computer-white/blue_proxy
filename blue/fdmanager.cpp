@@ -5,6 +5,8 @@
 #include "fdmanager.h"
 #include "log.h"
 #include "hook.h"
+
+// 文件描述符fd管理
 namespace blue
 {
     static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
