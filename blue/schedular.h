@@ -4,7 +4,7 @@
 #include <list>
 #include "fiber.h"
 #include "mthread.h"
-// 协程调度模块:分配协程到对应的线程上
+// 协程调度模块:分配协程到对应的线程
 namespace blue
 {
     class Schedular

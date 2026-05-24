@@ -2,6 +2,8 @@
 #include "log.h"
 #include "macro.h"
 #include "hook.h"
+
+// 协程调度模块:分配协程到对应的线程
 namespace blue
 {
     static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");
