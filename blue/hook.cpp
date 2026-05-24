@@ -6,6 +6,8 @@
 #include "hook.h"
 #include "iomanager.h"
 #include "log.h"
+
+// hook
 namespace blue
 {
 	static blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");

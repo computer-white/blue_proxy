@@ -12,6 +12,8 @@
 
 // 将系统调用的sleep()拦截,变为我们自己实现的sleep()执行一个特定时间后提交任务的函数
 // 而后调用YieldToHold(),从而让线程让出cpu,实现出看起来是同步阻塞,但实际上是异步非阻塞
+
+// hook
 namespace blue
 {
 	bool is_hook_enable();
