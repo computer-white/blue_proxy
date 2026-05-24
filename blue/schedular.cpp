@@ -338,9 +338,29 @@ namespace blue
     void Schedular::idle()
     {
         BLUE_LOG_INFO(g_logger) << "idle fiber started";
-        while (!stopping())
+        while (true)
         {
-            blue::Fiber::YieldToHold();
+            // ===== 加入退出检查 =====
+            if (m_stopping.load(std::memory_order_acquire))
+            {
+                MmutexType::lockSco lock(m_mutex);
+                bool has_pending = false;
+                for (auto& it : m_fibers)
+                {
+                    if (it.threadId == -1 || it.threadId == blue::GetThreadId())
+                    {
+                        has_pending = true;
+                        break;
+                    }
+                }
+                if (!has_pending && m_activeThreadCounts.load(std::memory_order_acquire) == 0)
+                {
+                    // 把自己设为 TERM，让 run() 的 break 触发
+                    blue::Fiber::GetThis()->setStatus(blue::Fiber::Status::TERM);
+                    return;
+                }
+            }
         }
+        blue::Fiber::YieldToHold();
     }
 }

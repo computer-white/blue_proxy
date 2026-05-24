@@ -47,14 +47,32 @@ namespace blue
                 virtual void handleClient(MSocket::MSocketPtr sock) override;
             private:
 
+                /**
+                 * @brief 处理webSocket
+                 * @param sock socket 对象指针
+                 * @param request 拿到的解析后得http请求智能指针
+                 * @param response 响应智能指针
+                 */
                 void _handleWebSocket(MSocket::MSocketPtr sock, HttpRequest::HttpRequestPtr request, HttpResponse::HttpResponsePtr response, const std::string &targeturl);
 
+                /**
+                 * @brief 处理web管理页面(请求localhost:8020/admin)
+                 * @param request 拿到的解析后得http请求智能指针
+                 * @param response 响应智能指针
+                 * @param session 会话
+                 */
                 void _handleAdmin(HttpRequest::HttpRequestPtr request, HttpResponse::HttpResponsePtr response, HttpSession::HttpSessionPtr session);
 
+                /**
+                 * @brief 处理隧道连接
+                 * @param sock socket 对象指针
+                 * @param request 拿到的解析后得http请求智能指针
+                 */
                 void _handleConnect(MSocket::MSocketPtr sock,
                                             HttpRequest::HttpRequestPtr request);
                 /**
                  * @brief 将客户端请求头部信息设置到headers中作为我们代理发给其他目标的header
+                 * @param request 拿到的解析后得http请求智能指针
                  * @param headers 需要被设置请求头部信息
                  */
                 void _setHeaders(HttpRequest::HttpRequestPtr request, std::map<std::string,std::string> &headers);

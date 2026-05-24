@@ -145,7 +145,8 @@ namespace blue
                                                          uint64_t timeout);
             /**
              * @brief 服务器端与客户端一次连接
-             * @param sock 用服务器端sockfd封装的对象
+             * @param stream 为支持ssl改用msockstream的父类stream
+             * @param time 连接创建的时间ms
              * @param owner 是否完全交给连接管理服务器端sockfd对象,默认 true
              */
             HttpConnection(SocketStream::SocketStreamPtr stream, uint64_t time = 0, bool owner = true);
