@@ -12,6 +12,7 @@
 #include "log.h"
 #include "mthread.h"
 
+// 配置文件
 namespace blue
 {
     // 配置基类

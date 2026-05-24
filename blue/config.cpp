@@ -1,5 +1,7 @@
 #include <iostream>
 #include "config.h"
+
+// 配置
 namespace blue
 {
     ConfigVarBase::ConfigVarBasePtr Config::LookUpBase(const std::string &name)
