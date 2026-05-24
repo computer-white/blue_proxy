@@ -51,6 +51,7 @@
 // 用name获取Logger,如果不存在那么输出的位置跟BLUE_LOG_MASSAGE_ROOT() 得到的Logger输出位置一样
 #define BLUE_LOG_NAME(name) blue::LoggerMgr::GetInstance()->getLogger(name)
 
+// 日志模块
 // 名称空间
 namespace blue
 {

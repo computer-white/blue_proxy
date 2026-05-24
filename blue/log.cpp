@@ -6,6 +6,8 @@
 #include <iomanip>
 #include "log.h"
 #include "config.h"
+
+// 日志模块
 namespace blue
 {
     // 重载枚举类的 <<
