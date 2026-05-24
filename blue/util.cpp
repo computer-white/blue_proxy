@@ -4,6 +4,8 @@
 #include "util.h"
 #include "log.h"
 #include "fiber.h"
+
+// 辅助函数
 namespace blue
 {
     blue::Logger::LoggerPtr g_logger = BLUE_LOG_NAME("system");

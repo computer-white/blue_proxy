@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <vector>
 #include <string>
+
+// 辅助函数
 namespace blue
 {
 
