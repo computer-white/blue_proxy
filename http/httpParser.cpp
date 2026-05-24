@@ -50,6 +50,7 @@ struct __RequestSizeIniter__
 
 static __RequestSizeIniter__ __S_Request_Size_Initer__;
 
+// http 解析(llhttp)
 namespace blue
 {
     namespace http
