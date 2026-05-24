@@ -1,6 +1,6 @@
 #ifndef __BLUE_MACRO_H__
 #define __BLUE_MACRO_H__
-// 自定义宏
+// 自定义宏模块
 #include <string>
 #include <assert.h>
 #include "util.h"
